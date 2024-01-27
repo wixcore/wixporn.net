@@ -352,6 +352,30 @@ function ds_theme_scripts_init()
 }
 
 /**
+* Добавляет перевод 
+*/ 
+function ds_script_translate_add($url, $uniquie, $version) 
+{
+    $translates = Registry::get('enqueue_script_translate'); 
+    if (empty($translates)) {
+        $translates = array();
+    }
+    
+    if (!isset($translates[$uniquie])) {
+        $translates[$uniquie] = array(
+            'url' => $url, 
+            'version' => $version, 
+            'uniquie' => $uniquie, 
+            'media' => $media, 
+        );
+        Registry::set('enqueue_script_translate', $translates); 
+        return true; 
+    }
+    
+    return false; 
+}
+
+/**
 * Функция регистрирует файл стилей
 * @return bolean
 */
@@ -587,7 +611,16 @@ function ds_theme_script_uri($uniquie = '') {
 */
 function ds_theme_get_script_html($uniquie = '') {
     if ($script = ds_theme_get_script($uniquie)) {
-        $javascript  = "<script ";
+
+        $javascript  = "";
+
+        $translates = ds_get('enqueue_script_translate'); 
+        if (isset($translates[$uniquie])) {
+
+            $javascript .= "<script></script>";
+        }
+
+        $javascript .= "<script ";
         $javascript .= 'id="js-' . $uniquie . '" ';
         $javascript .= 'type="text/javascript" ';
         $javascript .= 'src="' . $script['url'] . ($script['version'] ? '?version=' . $script['version'] : '') . '"';
@@ -821,7 +854,7 @@ function get_template_post($data, $slug = 'default')
             foreach($data['header']['content'] AS $key => $item) {
                 if ($key === 'post_time') {
                     $date = use_filters('ds_output_post_time', date('H:i', $item)); 
-                    $tpl[] = '<div data-time="' . $item . '" title="' . $date . '" class="' . $key . '">' . $date . '</div>';
+                    $tpl[] = '<div data-time="' . $item . '" title="' . ds_date('d F Y, H:i:s', $item) . '" class="' . $key . '">' . $date . '</div>';
                 } else {
                     $tpl[] = '<div class="' . $key . '">' . $item . '</div>';
                 } 

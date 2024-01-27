@@ -1,10 +1,9 @@
 <?php
+
 /**
- * / Основные пользовательские функции
- * / nick() - выводит ник и значок онлайна
- * / avatar - выводит аватар и иконку пользователя
- * / у всех функций есть параметры что выводить а что нет
- */
+* Устаревший класс
+*/
+
 class user
 {
     /**
@@ -15,17 +14,14 @@ class user
         /*
          * $url == 0        Выводит только ник
          * $url == 1        Выводит ник с ссылкой на страницу юзера
-         * $on  == 1        Выводит рядом с ником значок онлайн
-         * $medal == 1    Выводит медальку рядом со значком онлайн
          */
-        $ank        = db::fetch('SELECT `nick`, `date_last`, `rating`, `browser` FROM `user` WHERE `id` = "' . $user . '" LIMIT 1 ', ARRAY_A);
+        $ank        = get_user($user);
         $nick       = null;
-        $online     = null;
-        $icon_medal = null;
+
         // Вывод ника 
         if ( $user == 0 ) {
             $ank = array(
-                 'id' => '0',
+                'id' => '0',
                 'nick' => 'Cистема',
                 'pol' => '1',
                 'rating' => '0',
@@ -34,7 +30,7 @@ class user
             );
         } elseif ( !$ank ) {
             $ank = array(
-                 'id' => '0',
+                'id' => '0',
                 'nick' => '[Удален]',
                 'pol' => '1',
                 'rating' => '0',
@@ -42,37 +38,16 @@ class user
                 'date_last' => time() 
             );
         }
+
         if ( $url == true ) {
             $nick = ' <a href="/info.php?id=' . $user . '">' . text( $ank['nick'] ) . '</a> ';
         } else {
             $nick = text( $ank['nick'] );
         }
-        // Вывод значка онлайн
-        if ( $user != 0 && $ank['date_last'] > time() - 600 && $on == true ) {
-            $online = ' <img src="/style/icons/online' . ( $ank['browser'] == 'wap' ? '' : '_web' ) . '.gif" alt="Online" /> ';
-        }
-        // Вывод медали
-        $R = $ank['rating'];
-        if ( $medal == 1 && $R >= 6 ) {
-            if ( $R >= 6 && $R <= 11 ) {
-                $img = 1;
-            } elseif ( $R >= 12 && $R <= 19 ) {
-                $img = 2;
-            } elseif ( $R >= 20 && $R <= 27 ) {
-                $img = 3;
-            } elseif ( $R >= 28 && $R <= 37 ) {
-                $img = 4;
-            } elseif ( $R >= 38 && $R <= 47 ) {
-                $img = 5;
-            } elseif ( $R >= 48 && $R <= 59 ) {
-                $img = 6;
-            } elseif ( $R >= 60 ) {
-                $img = 7;
-            }
-            $icon_medal = ' <img src="/style/medal/' . $img . '.png" alt="*" /> ';
-        }
-        return $nick . $icon_medal . $online;
+
+        return $nick ;
     }
+
     /**
      * / Аватар, иконка группы пользователя
      */
@@ -102,10 +77,12 @@ class user
                 'group_access' => '0' 
             );
         }
+
         // Аватар
         if ( $type == 0 || $type == 1 ) {
             $AVATAR = get_avatar($user, 'thumbnail'); 
         }
+
         // Иконка пользователя
         if ( $type == 0 || $type == 2 ) {
             if ( db::count("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$user' AND (`time` > '" . time() . "' OR `navsegda` = '1')") != 0 ) {
@@ -135,6 +112,7 @@ class user
         }
         return '<span class="image-avatar">' . $AVATAR . '</span> ' . $icon;
     }
+
     /**
      * / Функция выборки пользовательских данных
      * / Выводин данные из таблицы user
@@ -179,38 +157,15 @@ class user
             $ank['group_name'] = $tmp_us['group_name'];
             $ank['level']      = $tmp_us['level'];
         }
+
         // Если поставлен параметр выводить фото
         if ( $photo ) {
             $ank['avatar'] = get_avatar($ank['id'], 'thumbnail');
         }
-        // Вывод значка онлайн
-        if ( $ID != 0 && $ank['date_last'] > time() - 600 ) {
-            $ank['online'] = ' <img src="/style/icons/online' . ( $ank['browser'] == 'wap' ? '' : '_web' ) . '.gif" alt="Online" /> ';
-        } else {
-            $ank['online'] = null;
-        }
-        // Вывод медали
-        $R = $ank['rating'];
-        if ( $R >= 6 ) {
-            if ( $R >= 6 && $R <= 11 ) {
-                $img = 1;
-            } elseif ( $R >= 12 && $R <= 19 ) {
-                $img = 2;
-            } elseif ( $R >= 20 && $R <= 27 ) {
-                $img = 3;
-            } elseif ( $R >= 28 && $R <= 37 ) {
-                $img = 4;
-            } elseif ( $R >= 38 && $R <= 47 ) {
-                $img = 5;
-            } elseif ( $R >= 48 && $R <= 59 ) {
-                $img = 6;
-            } elseif ( $R >= 60 ) {
-                $img = 7;
-            }
-            $ank['medal'] = ' <img src="/style/medal/' . $img . '.png" alt="*" /> ';
-        } else {
-            $ank['medal'] = null;
-        }
+
+        $ank['online'] = '';
+        $ank['medal'] = '';
+        
         // Иконка пользователя
         if ( db::count("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ID' AND (`time` > '" . time() . "' OR `navsegda` = '1')") != 0 ) {
             $ic_id = 'ban';
@@ -241,4 +196,3 @@ class user
         return $ank;
     }
 }
-?>

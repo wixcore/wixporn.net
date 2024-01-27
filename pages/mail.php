@@ -29,10 +29,12 @@ if (isset($_POST['comments_hash'])) {
     }
 
     if (!is_errors()) {
+        $attachments = (isset($_POST['attachments']) ? $_POST['attachments'] : array()); 
+
         $content = '<!-- CMS-Social Data {{' . serialize(use_filters('ds_mail_serialize_data', array(
             'user_id' => $user['id'], 
             'contact_id' => $ank['id'], 
-            'attachments' => (isset($_POST['attachments']) ? $_POST['attachments'] : array()), 
+            'attachments' => $attachments, 
         ))) . '}} -->' . "\r";
         $content .= $_POST['msg']; 
 
@@ -46,6 +48,13 @@ if (isset($_POST['comments_hash'])) {
         $post_id = db::insert_id(); 
 
         if ($posted) {
+            add_object_attachments($attachments, array(
+                'object' => 'mail', 
+                'object_id' => $post_id, 
+                'param1_id' => $user['id'], 
+                'param2_id' => $ank['id'], 
+            )); 
+
             if (empty($contact)) {
                 add_mail_contact($user['id'], $ank['id']);
                 add_mail_contact($ank['id'], $user['id']);
@@ -78,10 +87,16 @@ $query = new DB_Mail(array(
 do_event('ds_messages_pre_output', $ank, $query); 
 
 echo '<div class="wrap-page-mail">'; 
-ds_message('mail', array(
-    'title' => __('Сообщения'), 
-    'type' => 'mail', 
-)); 
+
+if ($ank['ban'] == 0) {
+    ds_message('mail', array( 
+        'title' => __('Сообщения'), 
+        'type' => 'mail', 
+    ));     
+} else {
+    echo '<div class="not-form-text">' . __('Пользователь заблокирован') . '</div>'; 
+}
+
 
 echo '<div class="wrap-messages">'; 
 do_event('ds_messages_helper_before', $ank, $query); 

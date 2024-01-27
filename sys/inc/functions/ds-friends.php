@@ -9,7 +9,7 @@ function get_friends_counters($user_id)
 	}
 
 	$sql = "SELECT 
-			 SUM(IF(status = 1, 1, 0)) AS 'friends', 
+			 SUM(IF(status = 1 AND friend_id = '$user_id', 1, 0)) AS 'friends', 
 			 SUM(IF((status = 2 OR status = 0) AND friend_id = '$user_id', 1, 0)) AS 'subscribers', 
 			 SUM(IF((status = 2 OR status = 0) AND user_id = '$user_id', 1, 0)) AS 'subscriptions', 
 			 SUM(IF(status = -1 AND user_id = '$user_id', 1, 0)) AS 'locked', 
@@ -17,7 +17,7 @@ function get_friends_counters($user_id)
 			 SUM(IF(status = 0 AND user_id = '$user_id', 1, 0)) AS 'out_requests'
 			 FROM `friends` 
 			WHERE user_id = '$user_id' OR friend_id = '$user_id'";
-			
+
 	$counters[$user_id] = db::fetch($sql); 
 
 	return $counters[$user_id]; 
@@ -128,7 +128,16 @@ function action_friend($user_id, $friend_id, $status = 1)
 			if ($i == 'confirm') $result = 'confirmed'; 
 			if ($f == 'subscribed') $result = 'confirmed';  
 
+			del_notify($user_id, $friend_id, false, 'friends'); 
+			add_notify($user_id, $friend_id, 'friends_added', 'friends', array(
+				'friend_id' => $user_id, 
+			));
+
 		} elseif ($i == 'add') {
+			add_notify($user_id, $friend_id, 'friends_add', 'friends', array(
+				'friend_id' => $user_id, 
+			));
+
 			add_subscription('friends', $user_id, $friend_id); 
 			set_friend_status($user_id, $friend_id, 0);
 			$result = 'added'; 
@@ -143,7 +152,6 @@ function action_friend($user_id, $friend_id, $status = 1)
 			if ($i == 'subscribed') $result = 'unsubscribed'; 
 			if ($i == 'sent') $result = 'canceled'; 
 			if ($i == 'unlock') $result = 'unlocked'; 
-
 
 			delete_subscription('friends', $user_id, $friend_id); 
 			db::delete('friends', array(

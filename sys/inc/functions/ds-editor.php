@@ -24,13 +24,14 @@ function get_editor($name = 'msg', $value = '', $attr = array()) {
 	$ds_button['code'] = '<a href="javascript:tag(\'[code]\', \'[/code]\', \'' . $hash . '\')"><i class="icon icon-code"></i></a>'; 
 
 	$ds_button = use_filters('ds_editor_panel_buttons', $ds_button, $hash, $name); 
-
-	$ds_smiles = use_filters('ds_editor_panel_smiles', ''); 
+	$ds_smiles = use_filters('ds_editor_panel_smiles', get_list_emoji_html($hash)); 
 
 	$ds_editor .= '<div class="ds-editor-panel">' . join(' ', $ds_button) . '</div>';
 	$ds_editor .= '<div class="ds-editor-smiles">' . $ds_smiles . '</div>';
 	$ds_editor .= '<div class="ds-editor-modal" id="ds_editor_modal" style="display: none;"></div>';
+	$ds_editor .= use_filters('ds_editor_textarea_before', ''); 
 	$ds_editor .= '<textarea class="ds-editor-textarea" name="' . $name . '" id="' . $hash . '" placeholder="' . $attr['placeholder'] . '" data-hash="' . $attr['hash'] . '">' . $value . '</textarea>';
+	$ds_editor .= use_filters('ds_editor_textarea_after', ''); 
 	$ds_editor .= '<div class="ds-editor-helper" data-hash="' . $hash . '"></div>';
 	$ds_editor .= '<input type="hidden" name="ds_editor_name" value="' . $name . '" />';
 	$ds_editor .= '<input type="hidden" name="ds_editor_hash" value="' . $hash . '" />';

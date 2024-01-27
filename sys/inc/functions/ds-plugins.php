@@ -52,12 +52,15 @@ function ds_plugin_activate($plug, $update = false)
     do_event('ds_plugin_pre_activation', $plug);
     do_event('ds_plugin_' . $plug . '_pre_activation', $plug);
 
-    if (isset($plugins[$plug]) && $plugins[$plug]['active'] != '1') {
+    if (isset($plugins[$plug])) {
+        if ($plugins[$plug]['active'] != '1') {
+            do_event('ds_plugin_activation', $plug);
+            do_event('ds_plugin_' . $plug . '_activation', $plug);            
+        }
+        
         $plugins[$plug]['active'] = '1'; 
         update_option('ds_plugins', $plugins, 'plugins'); 
 
-        do_event('ds_plugin_activation', $plug);
-        do_event('ds_plugin_' . $plug . '_activation', $plug);
         return true;
     }
 

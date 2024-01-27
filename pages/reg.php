@@ -23,7 +23,7 @@ if (isset($_GET['id']) && isset($_GET['hash'])) {
         $_SESSION['message'] = __('Вы успешно подтвердили свой E-Mail');
         $redirect_url = use_filters('ds_email_confirm_redirect', get_user_url($ank)); 
 
-        ds_redirect($redirect_url);
+        ds_redirect($redirect_url); 
     } else {
         add_error(__('Ошибка при подтверждении E-Mail')); 
     }
@@ -88,7 +88,7 @@ $reg = array();
 if (isset($_POST['reg'])) {
     $reg = use_filters('ds_user_reg_data', array(
         'nick' => trim($_POST['login']), 
-        'email' => trim($_POST['email']), 
+        'email' => (isset($_POST['email']) ? trim($_POST['email']) : ''), 
         'pol' => ($_POST['gender'] == 1 ? 1 : 0), 
         'password' => trim($_POST['password']), 
         'confirm' => $_POST['confirm'], 
@@ -104,12 +104,24 @@ if (isset($_POST['reg'])) {
         add_error(__('Логин %s уже используется', text($reg['nick']))); 
     }
 
-    if (empty($reg['email'])) {
-        add_error(__('Вы не указали E-Mail адрес')); 
-    } elseif (!validate_email($reg['email'])) {
-        add_error(__('Проверьте правильность E-Mail адреса')); 
-    } elseif (user_exists($reg['email'], 'email') !== false) {
-        add_error(__('Этот E-Mail уже привязан к другому аккаунту')); 
+    if ($set['reg_select'] == 'open_mail') {
+        if (empty($reg['email'])) {
+            add_error(__('Вы не указали E-Mail адрес')); 
+        }    
+    }
+
+    if (use_filters('ds_reg_field_submit', true)) {
+        if ($_SESSION['captcha'] != $_POST['captcha']) {
+            add_error(__('Неправильный код с картинки')); 
+        }        
+    }
+
+    if ($reg['email']) {
+        if (!validate_email($reg['email'])) {
+            add_error(__('Проверьте правильность E-Mail адреса')); 
+        } elseif (user_exists($reg['email'], 'email') !== false) {
+            add_error(__('Этот E-Mail уже привязан к другому аккаунту')); 
+        }  
     }
 
     if (empty($reg['password']) || strlen2($reg['password']) < 6 || strlen2($reg['password']) > 18) {
@@ -118,7 +130,7 @@ if (isset($_POST['reg'])) {
         add_error(__('Пароли не совпадают')); 
     }
     
-    $activation = mt_rand(1000, 9999);
+    $activation = ($set['reg_select'] == 'open_mail' ? mt_rand(1000, 9999) : '');
 
     if (!is_errors()) {
         db::insert('user', use_filters('ds_user_reg_insert', array(
@@ -144,11 +156,14 @@ if (isset($_POST['reg'])) {
                 $content .= __('Данные для входа:') . "\n"; 
                 $content .= __('Логин: %s', $reg['nick']) . "\n"; 
                 $content .= __('Пароль: %s', $reg['password']) . "\n\n"; 
-                $content .= __('Код подтверждения: ' . $activation) . "\n\n"; 
-                $content .= __('Для завершения регистрации введите код, или перейдите по этой ссылке: %s', get_query_url(array(
-                    'id' => $user_id, 
-                    'hash' => md5($activation . ':' . SALT_FORMS_FIELDS), 
-                ))); 
+
+                if ($set['reg_select'] == 'open_mail') {
+                    $content .= __('Код подтверждения: ' . $activation) . "\n\n"; 
+                    $content .= __('Для завершения регистрации введите код, или перейдите по этой ссылке: %s', get_query_url(array(
+                        'id' => $user_id, 
+                        'hash' => md5($activation . ':' . SALT_FORMS_FIELDS), 
+                    )));                     
+                }
 
                 $mail_title = use_filters('ds_reg_mail_title', __('Регистрация на %s', $_SERVER['HTTP_HOST'])); 
                 $mail_message = use_filters('ds_reg_mail_message', $content); 
@@ -170,7 +185,15 @@ if (isset($_POST['reg'])) {
 $set['title'] = __('Регистрация');
 get_header(); 
 
-if (isset($_SESSION['id_user']) && isset($_GET['action']) && $_GET['action'] == 'activation') { 
+if ($set['reg_select'] == 'close') {
+    ?>
+    <div class="registration-suspend">
+        <?php echo __('Регистрация временно приостановлена'); ?>
+    </div>
+    <?php
+}
+
+elseif (isset($_SESSION['id_user']) && isset($_GET['action']) && $_GET['action'] == 'activation') { 
 $ank = get_user($_SESSION['id_user']); 
 $time_sent = get_user_meta($ank['id'], '__reg_sent_email'); 
 $time_resent = (60 * 5) - (time() - $time_sent); 
@@ -234,6 +257,14 @@ $time_resent = (60 * 5) - (time() - $time_sent);
     <div class="ds-reg-input ds-reg-input-gender">
         <div><input id="gender_man" type="radio" name="gender" value="1" <?php echo (isset($reg['pol']) && $reg['pol'] == 1 ? 'checked' : (!isset($reg['pol']) ? 'checked' : '')); ?> /><label for="gender_man"><?php echo __('Мужской'); ?></label></div>
         <div><input id="gender_woman" type="radio" name="gender" value="0" <?php echo (isset($reg['pol']) && $reg['pol'] == 0 ? 'checked' : ''); ?> /><label for="gender_woman"><?php echo __('Женский'); ?></label></div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (use_filters('ds_reg_field_captcha', true)) : ?>
+    <div class="ds-reg-input ds-reg-input-captcha">
+        <label for="captcha"><?php echo __('Код с картинки'); ?></label>
+        <img src="<?php echo get_site_url('/captcha.php?v=' . time()); ?>" alt="Captcha" onclick="(function(e){e.src=e.src.replace(/v=([0-9]+)/g,'v=' + Date.now())}(this))" />
+        <input id="captcha" type="text" name="captcha" value="" autocomplete="off" />
     </div>
     <?php endif; ?>
 

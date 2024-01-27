@@ -32,14 +32,14 @@ add_event('ds_init', 'update_user_information', 10);
 // Отправка комментариев
 add_event('ds_init', 'ds_comments_init', 10); 
 
-// Загрузка файлов
-//add_event('ds_init', 'handle_upload_init', 10); 
-
 // Инициализация файлов пользователя
 add_event('ds_init', 'handle_files_init', 10); 
 
 // Инициализация ленты пользователя
 add_event('ds_init', 'handle_feeds_init', 10); 
+
+// Инициализация обсуждений пользователя
+add_event('ds_init', 'handle_discussions_init', 10); 
 
 // Инициализация лент пользователя
 add_event('ds_init', 'handle_lenta_init', 10); 
@@ -77,8 +77,22 @@ add_event('ds_user_init', 'default_user_settings', 10);
 // Регистрируем виджеты и области виджетов
 add_event('ds_init', 'ds_widgets_init'); 
 
+// Регистрируем уведомления
+add_event('ds_init', 'ds_notify_init'); 
+
+// Инициализируем поиск по сайту
+add_event('ds_init', 'ds_seacrh_init'); 
+
+// Чистка вложений при удалении файла
+add_event('ds_file_deleted', 'clear_object_attachments', 1, 10); 
+
+// Инициализация прав доступа пользователя
+add_event('ds_plugins_loaded', 'setup_user_access'); 
+
+ds_rewrite_rule('search\/', H.'pages/search.php');
 ds_rewrite_rule('exit\.php', 'ds_user_logout'); 
 ds_rewrite_rule('(.*)\.php', H.'pages/$1.php');
 ds_rewrite_rule('feed\/', H.'user/feed/index.php');
+ds_rewrite_rule('feed\/([0-9]+)', H.'user/feed/comments.php', 'post_id=$1');
 
 ds_rewrite_rule('ds-ajax\/', ROOTPATH . '/sys/inc/ajax.php'); 

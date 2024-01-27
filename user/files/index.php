@@ -54,7 +54,9 @@ $term_id = (int) get_query_vars('term_id');
 
 if ($term_id == 0) {
     $term = get_files_term_root($author['id'], $ds_request['files_type']); 
-    $term_id = $term['term_id']; 
+    if ($term) {
+        $term_id = $term['term_id']; 
+    }
 } else {
     $term = get_files_term($term_id, $author_id);
 }

@@ -39,7 +39,7 @@ ds_files_breadcrumb($term_id, true, $mask);
 		$thumbnail = get_file_thumbnail($file['id'], 'medium'); 
 
 		if ($thumbnail) {
-			echo '<div class="box-group-block"><img src="' . $thumbnail['file'] . '" /></div>'; 
+			echo '<div class="box-group-block"><img class="ds-image-preview" src="' . $thumbnail['file'] . '" /></div>'; 
 		}
 
 		$filename = ROOTPATH . $file['path'] . $file['name']; 
@@ -120,7 +120,22 @@ ds_files_breadcrumb($term_id, true, $mask);
 		</div>
 	</div>
 
-	<?php if ($public == true) : ?>
+	<?php 
+	$has_comment = true;  
+
+	if ($public == false) {
+		$has_comment = false; 
+	} elseif (is_user() && $file['comment'] == 'friends' && !is_friend($user['id'], $file['user_id'])) {
+		$has_comment = false; 		
+	} elseif ($file['comment'] == 'private') {
+		$has_comment = false; 
+	}
+
+	if (is_user() && $file['user_id'] == $user['id']) {
+		$has_comment = true; 
+	}
+
+	if ($has_comment == true) : ?>
 	<div class="box-group" data-group="comments"> 
 		<div class="box-group-title">
 		<?php 
@@ -137,6 +152,7 @@ ds_files_breadcrumb($term_id, true, $mask);
 			'type' => 'comment',  
 			'object' => 'files', 
 			'object_id' => $file['id'],  
+			'comments_title' => $ds_files_config['labels']['root_term_name'] . ' / ' . text($file['title']), 
 		)); 
 		?>
 		</div>
@@ -171,6 +187,29 @@ ds_files_breadcrumb($term_id, true, $mask);
 		        	'reply' => '?reply_to=' . $post['user_id'] . '&comment_id=' . $post['id'], 
 		        	'actions' => array(), 
 		        ); 
+
+		        $url = get_file_link($file); 
+
+		        if (is_user() && get_user_id() != $post['user_id']) {
+		        	$args['actions'][] = use_filters('ds_comment_link_reply', array(
+	        			'url' => get_query_url(array(
+	        				'reply' => $post['id'], 
+	        				'user_id' => $post['user_id'], 
+	        			), $url), 
+	        			'title' => __('Ответ'), 
+		        	), $post);
+		        }
+
+		        if (is_user_access('user_prof_edit')) {
+		        	$args['actions'][] = array(
+	        			'url' => get_query_url(array(
+	        				'cmt' => 'files', 
+	        				'cma' => 'remove', 
+	        				'cmu' => $post['id'], 
+	        			), $url), 
+	        			'title' => __('Удалить'), 
+		        	); 
+		        }
 
 		        echo get_comment_template($args); 
 			}

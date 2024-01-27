@@ -12,18 +12,24 @@
 
 .choose-attachment {
     display: inline-block;
-    height: 20px;
-    width: 34px;
     vertical-align: middle;
-    font: normal normal normal 20px/1 FontAwesome;
     line-height: 26px;
     text-align: center;
     color: #a2c1d4;
     cursor: pointer;
 }
 
+.ds-comment-form-attach .choose-attachment {
+    height: 20px;
+    width: 34px;
+}
+
 .choose-attachment::before {
+    font: normal normal normal 20px/1 FontAwesome;
     content: "\f0c6";
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 4px;
 }
 
 .choose-types {

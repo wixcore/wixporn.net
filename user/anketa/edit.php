@@ -10,7 +10,7 @@ only_reg('/');
 if (isset($_GET['id'])) {
 	$ank = get_user($_GET['id']); 
 
-	if ($user['id'] != $ank['id'] && !is_user_access('user_prof_edit')) {
+	if ($user['id'] != $ank['id'] && !is_user_access('user_edit')) {
 		ds_die(__('У вас нет доступа')); 
 	}
 } else { 

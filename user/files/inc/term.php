@@ -151,12 +151,12 @@ do_event('ds_files_after_output', $term);
 
 $actions_term = array(); 
 
-if ($author['id'] == $user['id'] && ($term['parent'] != 0 && $term['path'] != 0)) {
+if ((is_user_access('user_files_edit', 'user_files_delete') || $author['id'] == $user['id']) && ($term['parent'] != 0 && $term['path'] != 0)) {
 	$actions_term['edit'] = array(
 		'%link%' => $permalinks['edit_term'], 
 		'%title%' => $strings['edit_term'], 
 		'%icon%' => get_icon_html($ds_files_config['icons']['edit_term']), 
-	); 	
+	); 
 }
 
 if (count($actions_term) > 0) {

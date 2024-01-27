@@ -6,7 +6,7 @@ if ($file_id && !$file) {
     p404();
 }
 
-if (!is_user_access('loads_file_delete') && get_user_id() != $file['user_id']) {
+if (!is_user_access('user_files_delete') && get_user_id() != $file['user_id']) {
 	ds_die(__('У вас нет доступа')); 
 }
 

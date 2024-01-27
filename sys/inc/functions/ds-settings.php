@@ -44,10 +44,10 @@ function get_user_settings_page($page_id)
 
 function get_user_options($user_id, $setting_id) 
 {
-    $users_settings = ds_get('ds_users_settings', array());
+    $cache = ds_get('ds_users_settings', array());
 
-    if (isset($users_settings[$user_id])) {
-        return $users_settings[$user_id]; 
+    if (isset($cache[$user_id][$setting_id])) {
+        return $cache[$user_id][$setting_id]; 
     }
     
     $result = db::fetch("SELECT * FROM `user_options` WHERE `user_id` = '" . $user_id . "' AND `setting_id` = '" . $setting_id . "' LIMIT 1");  
@@ -63,8 +63,8 @@ function get_user_options($user_id, $setting_id)
         $opt = array_replace($set_page['default'], $opt); 
     }
 
-    $users_settings[$user_id] = $opt; 
-    ds_set('ds_users_settings', $users_settings); 
+    $cache[$user_id][$setting_id] = $opt; 
+    ds_set('ds_users_settings', $cache); 
 
     return $opt; 
 }

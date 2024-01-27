@@ -73,7 +73,7 @@ class Install
 		while ($filetables = readdir($opdirtables))
 		{
 			if (preg_match('#\.sql$#i',$filetables)) {
-				$table_name = preg_replace('#\.sql$#i', '', $filetables);
+				$table_name = preg_replace('#\.sql$#i', null, $filetables);
 				$sql = SQLParser::getQueriesFromFile($path_sql . '/' . $filetables);
 
 				$continue = false; 

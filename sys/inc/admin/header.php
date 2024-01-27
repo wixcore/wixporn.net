@@ -34,6 +34,7 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
                 <i class="fa fa-bars" aria-hidden="true"></i>
             </a>
             <div class="header-menu-add">
+            <?php if (is_user_access('update_core')) : ?>
                 <a class="link link-update" href="<?php echo get_site_url('/adm_panel/update.php'); ?>">
                     <i class="fa fa-refresh" aria-hidden="true"></i>
                     <?php 
@@ -46,6 +47,7 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
                     }
                     ?>
                 </a>
+            <?php endif; ?>
             </div>
         </nav>
 	</div>

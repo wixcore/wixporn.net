@@ -1,7 +1,13 @@
 var AudioPlayer = new Audio(); 
 var AudioCurrentHash = ""; 
 var AudioCurrentUniquie = ""; 
+var AudioRepeat = false; 
+var AudioShuffle = false; 
 window.pageTitle = document.title; 
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
 
 function setCookie(name,value,days) {
     var expires = "";
@@ -77,6 +83,34 @@ jQuery(function($) {
 		}
 	});
 
+	// Repeat audio
+	$(document).on('click', '.dpl-repeat', function() {
+		var parent = $(this).closest('.dpl');
+		var repeat = parent.attr('data-repeat') || '0'; 
+
+		if (repeat == '0') {
+			parent.attr('data-repeat', 1); 
+			AudioRepeat = true; 
+		} else {
+			parent.attr('data-repeat', 0); 
+			AudioRepeat = false; 
+		}
+	});
+
+	// Repeat audio
+	$(document).on('click', '.dpl-shuffle', function() {
+		var parent = $(this).closest('.dpl');
+		var shuffle = parent.attr('data-shuffle') || '0'; 
+
+		if (shuffle == '0') {
+			parent.attr('data-shuffle', 1); 
+			AudioShuffle = true; 
+		} else {
+			parent.attr('data-shuffle', 0); 
+			AudioShuffle = false; 
+		}
+	});
+
 	// Toggle Player
 	$(document).on('click', '.dpl-toggle', function() {
 		var parent = $(this).parents('.dpl');
@@ -96,6 +130,10 @@ jQuery(function($) {
 					var data = JSON.parse(currentPlay); 
 					if (hash == data.hash) {
 						AudioPlayer.currentTime = data.currentTime; 
+					}
+
+					if (data.volume) {
+						AudioPlayer.volume = data.volume; 
 					}
 				}
 			}
@@ -151,6 +189,7 @@ jQuery(function($) {
 		setCookie('playerData', JSON.stringify({
 			hash: AudioCurrentHash, 
 			currentTime: AudioPlayer.currentTime, 
+			volume: AudioPlayer.volume, 
 		}), 1); 
 
 		// Time string playing 
@@ -180,9 +219,32 @@ jQuery(function($) {
 		AudioPlayerPause(); 
 	});
 
+	// Volume Change
+	AudioPlayer.addEventListener('volumechange', function() {
+		var volume = AudioPlayer.volume; 
+		$('.dpl-volume-bar').css('width', (volume * 100) + '%'); 
+	});
+
 	// Ended audio 
 	AudioPlayer.addEventListener('ended', function () {
 		AudioPlayerStop(); 
+
+		// Repeater
+		if (AudioRepeat == true) {
+			setTimeout(function() {
+				AudioPlayer.play(); 
+			}, 1000); 
+			return ;
+		}
+
+		// Shuffle
+		if (AudioShuffle == true) {
+			var playlist = $(document).find('.dpl'); 
+			var randomInt = getRandomInt(playlist.length); 
+				playlist.eq(randomInt).find('.dpl-toggle').click(); 
+
+			return ;
+		}
 
 		var is_current = false; 
 		$(document).find('.dpl').each(function(index, elem) {

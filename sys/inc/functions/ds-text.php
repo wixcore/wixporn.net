@@ -288,7 +288,7 @@ function get_time_ago($time = 0, $join = ' ', $slice = false)
     return join($join, $output); 
 }
 
-function cmp2 ($a, $b) 
+function cmp2($a, $b) 
 {
     if ($a['2'] == $b['2']) return 0;
     return ($a['2'] > $b['2']) ? -1 : 1;
@@ -385,18 +385,64 @@ function links($msg)
   	return $msg;
 }
 
-// функция обрабатывает текстовые строки перед выводом в браузер
-// настоятельно не рекомундуется тут что-либо менять
-function output_text($str, $br = 1, $html = 1, $smiles = 1, $links = 1, $bbcode = 1)
+/**
+* Разбивает сообщение с серилизоваными данными в массив 
+* @return array
+*/
+function get_text_array($str) 
 {
-    global $theme_ini;
-    
     $data = array(); 
+
     preg_match('/<!-- CMS-Social Data {{(.*)}} -->/m', $str, $matches); 
     if (!empty($matches[1])) {
         $data = unserialize($matches[1]); 
         $str = trim(preg_replace('/<!-- CMS-Social Data {{(.*)}} -->/m', '', $str)); 
     }
+    
+    return array(
+        'data' => $data, 
+        'content' => $str, 
+    ); 
+}
+
+/**
+* Обрабатывает строку вырезая теги и мета информацию
+* оставляя только подпись о вложении, смайлы и текст
+* @return string
+*/ 
+
+function output_short($str) 
+{
+    $array = get_text_array($str); 
+    
+    if ($array['content']) {
+    	$text = htmlentities($array['content'], ENT_QUOTES, 'UTF-8'); 
+    	$text = strip_tags(bbcode($text)); 
+    	$text = ds_filter_emoji($text); 
+    }
+
+    elseif (!empty($array['data']['attachments'])) {
+		$text = __('файл'); 
+    }
+
+    $text = use_filters('ds_output_short', $text, $array['content'], $array['data']); 
+
+    return $text; 
+}
+
+/**
+* Функция обрабатывает текстовые строки перед выводом в браузер
+* настоятельно не рекомендуется тут что-либо менять
+* @return string
+*/
+
+function output_text($str, $br = 1, $html = 1, $smiles = 1, $links = 1, $bbcode = 1)
+{
+    global $theme_ini;
+    
+    $array = get_text_array($str); 
+    $data = $array['data']; 
+    $str = $array['content']; 
     
     if ($br && isset($theme_ini['text_width']))
         $str = wordwrap($str, $theme_ini['text_width'], ' ', 1);
@@ -437,8 +483,8 @@ function output_text($str, $br = 1, $html = 1, $smiles = 1, $links = 1, $bbcode 
 
     $str = use_filters('ds_output_text', $str); 
 
-    if (!empty($data['attachments'])) {
-        $attachments = get_output_media($data['attachments']); 
+    if (!empty($array['data']['attachments'])) {
+        $attachments = get_output_media($array['data']['attachments']); 
 
         if ($attachments) {
             $str = $str . '<div class="ds-messages-attachments">' . $attachments . '</div>'; 
@@ -484,21 +530,37 @@ function get_output_media($files)
         'files' => array(), 
     ); 
 
-    $pre_output_media = use_filters('pre_get_output_media', null); 
+    $pre_output_media = use_filters('pre_get_output_media', null, $files); 
 
     if (null !== $pre_output_media) {
         return $pre_output_media; 
     }
 
-    foreach($files AS $file) {
+    foreach($files AS $file) 
+    {
         $file = get_file($file); 
 
         if (strpos($file['mimetype'], 'audio/') !== false) { 
             $array['audios'][] = get_audio_player($file); 
-        } elseif (strpos($file['mimetype'], 'image/') !== false || strpos($file['mimetype'], 'video/') !== false) {
+        } 
+
+        elseif (strpos($file['mimetype'], 'image/') !== false) {
             $thumbnail = get_file_thumbnail($file, 'medium'); 
-            $array['photos_videos'][] = '<a data-file="' . $file['id'] . '" href="' . get_file_link($file) . '">' . ds_file_thumbnail($file, 'medium') . '</a>'; 
-        } else {
+            $array['photos_videos'][] = '<a data-media="image" data-file="' . $file['id'] . '" href="' . get_file_link($file) . '">' . ds_file_thumbnail($file, 'medium') . '</a>'; 
+        } 
+
+        elseif (strpos($file['mimetype'], 'video/') !== false) {
+            $thumbnail = ds_file_thumbnail($file, 'medium'); 
+            if (!$thumbnail) {
+                $thumbnail = '<span class="ds-thumbnail-empty" data-type="video"><img src="' . get_site_url('/sys/static/images/null-480.png') . '" alt="" /></span>'; 
+            }
+
+            $array['photos_videos'][] = '<a data-media="video" data-file="' . $file['id'] . '" href="' . get_file_link($file) . '">' . 
+                                            $thumbnail . '<span class="ds-media-title">' . $file['title'] . '</span>' .
+                                        '</a>'; 
+        } 
+
+        else {
             $array['files'][] = '<div class="output-item-file"><a data-file="' . $file['id'] . '" href="' . get_file_link($file) . '">' . get_file_icon($file) . ' ' . $file['title'] . '</a></div>'; 
         }
     } 

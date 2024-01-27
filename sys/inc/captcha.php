@@ -13,7 +13,7 @@ class captcha
     function __construct( $str )
     {
         if ( !function_exists( 'gd_info' ) ) {
-            header( 'Location: /style/errors/gd_err.gif' );
+            header( 'Location: /style/captcha/gd_err.gif' );
             exit;
         }
         if ( imagetypes() & IMG_PNG )
@@ -30,7 +30,7 @@ class captcha
     function create( )
     {
         for ( $i = 0; $i < 5; $i++ ) {
-            $n = $this->str{$i};
+            $n = $this->str[$i];
             if ( $this->png )
                 $num[$n] = imagecreatefrompng( H . '/style/captcha/' . $n . '.png' );
             elseif ( $this->gif )
@@ -43,7 +43,6 @@ class captcha
 
     function MultiWave( )
     {
-        include_once H . 'sys/inc/MultiWave.php';
         $this->img = MultiWave( $this->img );
     }
 

@@ -1,5 +1,6 @@
 <?php 
 
+function online($user = NULL) {}
 function title() { }
 function img_copyright( $img ) { }
 function group($user = NULL) { }

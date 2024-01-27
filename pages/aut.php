@@ -3,6 +3,8 @@
 $show_all = true;
 only_unreg();
 
+do_event('ds_auth_init'); 
+
 if ( isset( $_GET['pass'] ) && $_GET['pass'] = 'ok' )
     $_SESSION['message'] = __('Пароль отправлен вам на E-Mail');
 
@@ -45,9 +47,6 @@ $set['title'] = __('Авторизация');
 
 get_header(); 
 
-if ( ( !isset( $_SESSION['refer'] ) || $_SESSION['refer'] == NULL ) && isset( $_SERVER['HTTP_REFERER'] ) && $_SERVER['HTTP_REFERER'] != NULL && !preg_match( '#mail\.php#', $_SERVER['HTTP_REFERER'] ) )
-    $_SESSION['refer'] = str_replace( '&', '&amp;', preg_replace( '#^http://[^/]*/#', '/', $_SERVER['HTTP_REFERER'] ) );
-
 ?>
 <form class="ds-auth-form" action="?" method="POST">
 	<?php do_event('ds_auth_fields_before'); ?>
@@ -65,7 +64,7 @@ if ( ( !isset( $_SESSION['refer'] ) || $_SESSION['refer'] == NULL ) && isset( $_
 	</div>
 	<?php do_event('ds_auth_fields_after'); ?>
 	<div class="ds-auth-submit">
-		<button class="button" type="submit"><?php echo __('Войти'); ?></button>
+		<button class="button" type="submit"><?php echo __('Войти'); ?></button> <a href="<?php echo get_site_url('/pass.php'); ?>"><?php echo __('Забыли пароль?'); ?></a>
 	</div>
 	<?php do_event('ds_auth_form_end'); ?>
 

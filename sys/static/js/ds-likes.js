@@ -17,6 +17,12 @@ jQuery(function() {
 
 		elemCounter.text(counter); 
 
+		console.log({
+            	action: 'ds-like',  
+            	uid: uid, 
+            	type: type, 
+            });
+
         $.ajax('/ds-ajax/', {
             data: {
             	action: 'ds-like',  

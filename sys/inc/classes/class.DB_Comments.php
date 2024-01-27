@@ -49,7 +49,6 @@ class DB_Comments
 		$SQLConst['%join%'] = "";
 
 		$where = array(); 
-
 		$where[] = "(`object` = '" . $args['object'] . "' AND `object_id` = '" . $args['object_id'] . "') "; 
 
 		if ($args['last'] > 0) {

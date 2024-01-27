@@ -57,6 +57,8 @@ class Forms
             $field = $this->input($args); 
         } elseif ($args['field_type'] == 'hidden') {
             $field = $this->hidden($args); 
+        } elseif ($args['field_type'] == 'captcha') {
+            $field = $this->captcha($args); 
         } elseif ($args['field_type'] == 'select') {
             $field = $this->select($args); 
         } elseif ($args['field_type'] == 'textarea') {
@@ -85,6 +87,8 @@ class Forms
             return $this->input($args); 
         } elseif ($args['field_type'] == 'hidden') {
             return $this->hidden($args); 
+        } elseif ($args['field_type'] == 'captcha') {
+            return $this->captcha($args); 
         } elseif ($args['field_type'] == 'select') {
             return $this->select($args); 
         } elseif ($args['field_type'] == 'textarea') {
@@ -130,7 +134,7 @@ class Forms
             $html .= '<label class="label-title" for="Radio' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
         }
 
-        $html .= '<div class="input-group mb-3">'; 
+        $html .= '<div class="input-group">'; 
         if (is_array($attr['field_values'])) {
             foreach($attr['field_values'] AS $value) {
                 $html .= '<label class="d-block"><input type="radio" value="' . $value['value'] . '" name="' . $attr['field_name'] . '"' 
@@ -156,7 +160,7 @@ class Forms
         if (!empty($attr['field_title'])) {
             $html .= '<label class="label-title" for="Select' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
         }
-        $html .= '<div class="input-group mb-3"><select class="form-control" id="Select' . $attr['field_name'] . '" name="' . $attr['field_name'] . '" ' . $this->get_attributes($attr['field_attr']) . ' >'; 
+        $html .= '<div class="input-group"><select class="form-control" id="Select' . $attr['field_name'] . '" name="' . $attr['field_name'] . '" ' . $this->get_attributes($attr['field_attr']) . ' >'; 
         if (is_array($attr['field_values'])) {
             foreach($attr['field_values'] AS $value) {
                 $html .= '<option value="' . $value['value'] . '" ' . ($attr['field_value'] == $value['value'] ? 'selected' : '') . '>' . $value['title'] . '</option>';
@@ -181,7 +185,7 @@ class Forms
         if (!empty($attr['field_title'])) {
             $html .= '<label class="label-title" for="Input' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
         }
-        $html .= '<div class="input-group mb-3">'; 
+        $html .= '<div class="input-group">'; 
         if (!empty($attr['field_before'])) {
             $html .= '<div class="input-group-prepend"><span class="input-group-text">' . $attr['field_before'] . '</span></div>';
         }
@@ -209,7 +213,7 @@ class Forms
         if (!empty($attr['field_title'])) {
             $html .= '<label class="label-title" for="Input' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
         }
-        $html .= '<div class="input-group mb-3">'; 
+        $html .= '<div class="input-group">'; 
         if (!empty($attr['field_before'])) {
             $html .= '<div class="input-group-prepend"><span class="input-group-text">' . $attr['field_before'] . '</span></div>';
         }
@@ -227,6 +231,33 @@ class Forms
         return $html;
     }
         
+    public function captcha($attr) 
+    {
+        $attr = array_merge($this->fields_default, $attr);
+
+        $html = '<div class="form-group">';
+        
+        if (!empty($attr['field_title'])) {
+            $html .= '<label class="label-title" for="Input' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
+        }
+        $html .= '<div class="input-group input-captcha">'; 
+        if (!empty($attr['field_before'])) {
+            $html .= '<div class="input-group-prepend"><span class="input-group-text">' . $attr['field_before'] . '</span></div>';
+        }
+        $html .= '<img src="' . get_site_url('/captcha.php?v=' . time()) . '" alt="Captcha" onclick="(function(e){e.src=e.src.replace(/v=([0-9]+)/g,\'v=\' + Date.now())}(this))" /><input class="form-control" id="Input' . $attr['field_name'] . '" type="text" name="' . $attr['field_name'] . '" value="' . $attr['field_value'] . '" placeholder="' . (!empty($attr['field_placeholder']) ? $attr['field_placeholder'] : '') . '" ' . $this->get_attributes($attr['field_attr']) . '  />'; 
+
+        if (!empty($attr['field_after'])) {
+            $html .= '<div class="input-group-append"><span class="input-group-text">' . $attr['field_after'] . '</span></div>';
+        }
+        if ($attr['field_desc']) {
+             $html .= '<small class="form-text text-muted">' . $attr['field_desc'] . '</small>';
+        }
+        $html .= '</div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+    
     public function hidden($attr) 
     {
         $attr = array_merge($this->fields_default, $attr);
@@ -243,7 +274,7 @@ class Forms
             $html .= '<label class="label-title" for="Textarea' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
         }
 
-        $html .= '<div class="input-group mb-3">'; 
+        $html .= '<div class="input-group">'; 
         $html .= '<textarea rows="5" class="form-control" id="Textarea' . $attr['field_name'] . '" name="' . $attr['field_name'] . '" placeholder="' . (!empty($attr['field_placeholder']) ? $attr['field_placeholder'] : '') . '" ' . $this->get_attributes($attr['field_attr']) . '>' . $attr['field_value'] . '</textarea>'; 
         $html .= '</div>';
 
@@ -259,20 +290,60 @@ class Forms
     public function editor($attr) 
     {
         $attr = array_merge($this->fields_default, $attr);
-        
+        $hash = md5(get_salt() . $attr['field_name']); 
+        $data = get_text_array($attr['field_value']); 
+
         $html = '<div class="form-group">'; 
         if (!empty($attr['field_title'])) {
             $html .= '<label class="label-title" for="Textarea' . $attr['field_name'] . '">' . $attr['field_title'] . '</label>'; 
         }
 
-        $html .= '<div class="input-group mb-3">'; 
-        //$html .= '<textarea rows="5" class="form-control" id="Textarea' . $attr['field_name'] . '" name="' . $attr['field_name'] . '" placeholder="' . (!empty($attr['field_placeholder']) ? $attr['field_placeholder'] : '') . '" ' . $this->get_attributes($attr['field_attr']) . '>' . $attr['field_value'] . '</textarea>'; 
-
-        $html .= get_editor($attr['field_name'], $attr['field_value'], array(
+        $html .= '<div class="input-group">'; 
+        $html .= get_editor($attr['field_name'], input_value_text(isset($data['content']) ? $data['content'] : $attr['field_value']), array(
             'placeholder' => (!empty($attr['field_placeholder']) ? $attr['field_placeholder'] : ''), 
         )); 
-        $html .= '</div>';
 
+        if (is_user()) {
+            $html .= '<div class="ds-form-attach">'; 
+            $html .= '<div class="choose">'; 
+            $html .= '<span class="choose-attachment" data-hash="' . $hash . '"> ' . __('Прикрепить файл') . '</span>';
+            $html .= '<div class="choose-types" data-hash="' . $hash . '">';
+            $all_media = get_media_types(); 
+
+            foreach($all_media AS $type => $media) {
+                if ($media['attachments'] === true) {
+                    $html .= '<a data-hash="' . $hash . '" data-type="' . $type . '" data-term="0" data-accept="' . join(',', $media['accept']) . '" class="choose-type choose-type-' . $type . ' load-files"><i class="fa ' . $media['icons']['attachments'] . '"></i> ' . $media['labels']['title'] . '</a>'; 
+                }
+            }
+
+            $html .= '</div>';
+            $html .= '</div>';
+            $html .= '</div>';
+
+            $attachments = array(); 
+            
+            if (!empty($data['data']['attachments'])) {
+                foreach($data['data']['attachments'] AS $attach_id) {
+                    $file = get_file($attach_id); 
+
+                    if (!$file) {
+                        continue;
+                    }
+
+                    $thumbnail = ''; 
+                    if (is_file_thumbnail($file['id'], 'thumbnail')) {
+                        $thumbnail = get_file_thumbnail_url($file['id'], 'thumbnail'); 
+                    }
+
+                    $attachments[] = '<div style="' . ($thumbnail ? 'background-image: url('.$thumbnail.')' : '') . '" class="attachments-item"><input type="hidden" value="' . $attach_id . '" name="attachments[]"><i class="' . get_file_icon($file, true) . '"></i><span class="title">' . text($file['title']) . '</span><span class="remove">×</span></div>'; 
+                }
+            }
+
+            $html .= '<div data-hash="' . $hash . '" id="attachments-' . $hash . '" class="attachments">'.join('', $attachments).'</div>';
+            $html .= '<div data-hash="' . $hash . '" class="wrap-choose-manager"></div>';             
+        }
+
+        $html .= '</div>';
 
         if ($attr['field_desc']) {
              $html .= '<small class="form-text text-muted">' . $attr['field_desc'] . '</small>';

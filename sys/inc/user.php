@@ -19,11 +19,10 @@ if (isset($user)) {
 		}
 	}
 
-    // бан пользователя
-	if (!isset($banpage)) {
-		if (db::count("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'all' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')") != 0 ) {
-			header('Location: /ban.php?'.SID);
-			exit;
+   // бан пользователя
+	if (strpos($_SERVER['REQUEST_URI'], '/ban.php') === false) {
+		if (db::count("SELECT COUNT(*) FROM `ban` WHERE `user_id` = '$user[id]' AND `time_until` > '$time'") != 0 ) {
+			ds_redirect(get_site_url('/ban.php'));
 		}
 	}
 

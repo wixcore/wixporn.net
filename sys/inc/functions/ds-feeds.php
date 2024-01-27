@@ -44,12 +44,9 @@ function delete_subscription($type, $user_id, $object_id)
 function register_feed($uid, $args = array()) 
 {
 	$setup = ds_get('ds_feed_setup', array()); 
-
-	$links = array();
-	$links['complain'] = array(
-		'title' => __('Пожаловаться'), 
-		'url' => '/test/', 
-	);  
+	$links = use_filters('ds_feeds_action_links', array(
+		// to do..
+	));
 
 	$default = array(
 		'callback_output' => false, 
@@ -58,13 +55,16 @@ function register_feed($uid, $args = array())
 		'labels' => array(
 			'feed_name' => __('Лента ID %s', $uid), 
 		), 
-		'action' => array(
+	); 
+
+	if (!empty($links)) {
+		$default['action'] = array(
 			'url' => false, 
 			'icon' => 'fa-ellipsis-h', 
 			'title' => __('Действие'), 
-			'items' => use_filters('ds_feeds_action_links', $links),  
-		), 
-	); 
+			'items' => $links,  
+		); 
+	}
 
 	$setup['feeds'][$uid] = array_replace($default, $args); 
 
@@ -94,6 +94,19 @@ function handle_feeds_init()
 		'labels' => array(
 			'feed_name' => __('Фотографии'), 
 			'feed_description' => __('Создает новость для подписчиков пользователя, о новых фотографиях.'), 
+		),
+	)); 
+
+	/**
+	* Музыка пользователя
+	*/ 
+	register_feed('ds_music', array(
+		'callback_output' => 'ds_feed_template_music', 
+		'callback_create' => 'add_feed_music', 
+		'event_name' => 'ds_files_music_uploaded', 
+		'labels' => array(
+			'feed_name' => __('Музыка'), 
+			'feed_description' => __('Создает новость для подписчиков пользователя, о новых аудиофайлах.'), 
 		),
 	)); 
 
@@ -129,6 +142,8 @@ function add_feed($feed_id, $object_id, $user_id = false, $content = '')
 		'content'   => $content, 
 		'time_create'   => time(),
 	)); 
+
+	return db::insert_id(); 
 }
 
 function ds_output_feed($feed) 
@@ -156,7 +171,7 @@ function ds_output_feed($feed)
 /**
 * Обновляет ленту пользователя
 */ 
-function update_feed($uid, $content = '')  
+function update_user_feed($uid, $content = '')  
 {
 	// Если это массив, сериализуем его
 	if (is_array($content)) {
@@ -168,24 +183,122 @@ function update_feed($uid, $content = '')
 	), array('id' => $uid)); 
 }
 
+/**
+* Удаляет запись из ленты пользователя
+*/ 
+function delete_user_feed($uid)  
+{
+	db::delete('feeds', array('id' => $uid)); 
+	db::delete('comments', array(
+		'object' => 'feeds', 
+		'object_id' => $uid, 
+	)); 
+}
+
 function add_feed_photos($file, $term) 
 {
-	$feed = db::fetch("SELECT * FROM `feeds` WHERE `slug` = 'ds_photos' AND `object_id` = '" . $term['term_id'] . "' AND `time_create` >= '" . (time() - 3600) . "' ORDER BY id DESC LIMIT 1"); 
- 
+	$feed = db::fetch("SELECT * FROM `feeds` WHERE `slug` = 'ds_photos' AND `object_id` = '" . $term['term_id'] . "' AND `time_create` >= '" . (time() - 3600) . "' ORDER BY id DESC LIMIT 1");
+
 	if (isset($feed['id'])) {
 		$photos = unserialize($feed['content']); 
 
 		if (count($photos) >= 1 && count($photos) <= 9) {
 			array_unshift($photos, $file['id']); 
-			update_feed($feed['id'], $photos); 
+
+		    add_object_attachments($file['id'], array(
+	            'object' => 'feed', 
+	            'object_id' => $feed_id, 
+	        )); 
+
+			update_user_feed($feed['id'], $photos); 
 			return ;	
 		}
 	}
 
 	$photos = array($file['id']); 
-	add_feed('ds_photos', $term['term_id'], $file['user_id'], $photos); 
+	$feed_id = add_feed('ds_photos', $term['term_id'], $file['user_id'], $photos); 
+
+	if ($feed_id) {
+	    add_object_attachments($file['id'], array(
+            'object' => 'feed', 
+            'object_id' => $feed_id, 
+        )); 
+	}
 }
 
+function add_feed_music($file, $term) 
+{
+	$feed = db::fetch("SELECT * FROM `feeds` WHERE `slug` = 'ds_music' AND `object_id` = '" . $term['term_id'] . "' AND `time_create` >= '" . (time() - 3600) . "' ORDER BY id DESC LIMIT 1"); 
+	if (isset($feed['id'])) {
+		$music = unserialize($feed['content']); 
+
+		if (count($music) >= 1 && count($music) <= 9) {
+			array_unshift($music, $file['id']); 
+
+		    add_object_attachments($file['id'], array(
+	            'object' => 'feed', 
+	            'object_id' => $feed_id, 
+	        )); 
+
+			update_user_feed($feed['id'], $music); 
+			return ;	
+		}
+	}
+
+	$music = array($file['id']); 
+	$feed_id = add_feed('ds_music', $term['term_id'], $file['user_id'], $music); 
+
+	add_object_attachments($file['id'], array(
+        'object' => 'feed', 
+        'object_id' => $feed_id, 
+    )); 
+}
+
+// music
+function ds_feed_template_music($feed) 
+{
+	$files = unserialize($feed['content']); 
+	$setup = ds_get('ds_feed_setup', array()); 
+
+	if ($feed['user_id'] == get_user_id()) {
+		unset($setup['feeds']['ds_music']['action']['items']['complaint']);
+		
+		$setup['feeds']['ds_music']['action']['items'][] = array(
+			'title' => __('Удалить запись'), 
+			'url' => '/delete/', 
+		); 
+	}
+
+	$header = array(
+		'image' => '<a href="' . get_user_url($feed['user_id']) . '">' . get_avatar($feed['user_id']) . '</a>', 
+		'content' => array(
+			'post_title' => '<a href="' . get_user_url($feed['user_id']) . '">' . get_user_nick($feed['user_id']) . '</a>', 
+			'post_time' => $feed['time_create'], 
+		), 
+	); 
+
+	if (!empty($setup['feeds']['ds_music']['action'])) {
+		$header['action'] = $setup['feeds']['ds_music']['action']; 
+	}
+
+	$content = get_output_media($files); 
+
+	$panels = array(
+		get_panel_likes('feeds', $feed),
+		get_panel_comment('feeds', array(
+			'url' => '/feed/' . $feed['id'], 
+			'object_id' => $feed['id'], 
+		)), 
+	); 
+
+	echo get_template_post(array(
+		'header' => $header, 
+		'content' => $content, 
+		'panel' => join('', $panels), 
+	)); 
+}
+
+// photos
 function ds_feed_template_photos($feed) 
 {
 	$files = unserialize($feed['content']); 
@@ -206,8 +319,11 @@ function ds_feed_template_photos($feed)
 			'post_title' => '<a href="' . get_user_url($feed['user_id']) . '">' . get_user_nick($feed['user_id']) . '</a>', 
 			'post_time' => $feed['time_create'], 
 		), 
-		'action' => $setup['feeds']['ds_photos']['action'], 
 	); 
+
+	if (!empty($setup['feeds']['ds_photos']['action'])) {
+		$header['action'] = $setup['feeds']['ds_photos']['action']; 
+	}
 
 	$images = array(); 
 	foreach($files AS $file_id) { 
@@ -220,9 +336,17 @@ function ds_feed_template_photos($feed)
 	}
 	$content = get_grid_images($images); 
 
+	$panels = array(
+		get_panel_likes('feeds', $feed),
+		get_panel_comment('feeds', array(
+			'url' => '/feed/' . $feed['id'], 
+			'object_id' => $feed['id'], 
+		)), 
+	); 
+
 	echo get_template_post(array(
 		'header' => $header, 
 		'content' => $content, 
-		'panel' => get_panel_likes('feeds', $feed), 
+		'panel' => join('', $panels), 
 	)); 
 }

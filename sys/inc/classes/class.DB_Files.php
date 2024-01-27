@@ -15,7 +15,7 @@ class DB_Files
 	public $request = '';  
 
 
-    public $mime_types = array(
+    public $mime_types = array( 
 		'image/jpeg', 
 		'image/gif', 
 		'image/png', 
@@ -194,14 +194,15 @@ class DB_Files
 
 		$this->request = $SQLSelect; 
 
-		$ids_files = db::select($SQLSelect); 
+		$ids_files = db::select($SQLSelect);  
 
 		$files = array(); 
-		foreach($ids_files AS $file) {
-			$files[] = get_file($file['id']); 
+		if (is_array($ids_files)) {
+			foreach($ids_files AS $file) {
+				$files[] = get_file($file['id']); 
+			}			
 		}
 
 		$this->files = $files; 
 	}
-
 }

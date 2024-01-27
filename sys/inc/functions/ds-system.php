@@ -10,7 +10,6 @@ function get_language()
     return $language; 
 } 
 
-
 function get_version() 
 {
     require ROOTPATH . '/sys/inc/version.php';
@@ -22,7 +21,8 @@ function get_version()
 * @return object | string | array
 */
 
-function ds_get($key, $default = NULL) {
+function ds_get($key, $default = NULL) 
+{
     if (isset($key)) { 
         $get = Registry::get($key); 
 
@@ -37,7 +37,8 @@ function ds_get($key, $default = NULL) {
 * Регистрирует глобальную переменную
 * @return bolean true
 */
-function ds_set($key, $var) {
+function ds_set($key, $var) 
+{
     return Registry::set($key, $var); 
 }
 
@@ -45,7 +46,8 @@ function ds_set($key, $var) {
 * Возвращает все глобальные данные
 * @return array
 */
-function ds_getAll() {
+function ds_getAll() 
+{
     return Registry::getAll($key); 
 }
 
@@ -152,11 +154,13 @@ function get_system()
     return $set; 
 }
 
-function sort_position($a, $b) { 
+function sort_position($a, $b) 
+{ 
     return strnatcmp($a["position"], $b["position"]); 
 } 
 
-function file_add_cache($cacheFile, $array) {
+function file_add_cache($cacheFile, $array) 
+{
     $cacheFile = PATH_CACHE . '/' . $cacheFile . '.cache';
 
     if (is_file($cacheFile)) {
@@ -166,7 +170,8 @@ function file_add_cache($cacheFile, $array) {
     file_put_contents($cacheFile, json_encode($array, JSON_UNESCAPED_UNICODE));
 }
 
-function file_get_cache($cacheFile) {
+function file_get_cache($cacheFile) 
+{
     $cacheFile = PATH_CACHE . '/' . $cacheFile . '.cache';
 
     if (is_file($cacheFile)) {
@@ -177,7 +182,8 @@ function file_get_cache($cacheFile) {
     return false; 
 }
 
-function file_delete_cache($cacheFile) {
+function file_delete_cache($cacheFile) 
+{
     $cacheFile = PATH_CACHE . '/' . $cacheFile . '.cache';
     if (is_file($cacheFile)) {
         unlink($cacheFile);
@@ -289,7 +295,8 @@ function ds_options_load()
     ds_set('ds_options', $cache);
 }
 
-function ds_get_file_extensions($path) {
+function ds_get_file_extensions($path) 
+{
     return strtolower(substr($path, strrpos($path, '.') + 1)); 
 }
 
@@ -353,7 +360,8 @@ function ds_check_installed()
     }
 }
 
-function is_serialized( $data ) {
+function is_serialized( $data ) 
+{
     if (!is_string($data)) {
         return false;
     }
@@ -624,4 +632,82 @@ function ds_mail($to, $subject, $message, $headers = '', $attachments = array())
 
         return false;
     }
+}
+
+
+/**
+* Регистрирует новый модуль поиска
+*/ 
+function ds_register_search($uid, $args = array()) 
+{
+    $register = ds_get('ds_register_search', array()); 
+
+    if (!isset($register[$uid])) {
+        $register[$uid] = $args; 
+    }
+
+    ds_set('ds_register_search', $register);
+}
+
+/**
+* Возвращает зарегистрированные поиски
+* Можно так-же получить конкретный по ID
+* @return array
+*/ 
+function get_register_search($uid = NULL) 
+{
+    $register = ds_get('ds_register_search', array()); 
+
+    if ($uid !== NULL && isset($register[$uid])) {
+        return $register[$uid]; 
+    }
+
+    return $register;
+}
+
+/**
+* Регистрируем модули поиска по умолчанию
+*/ 
+function ds_seacrh_init() 
+{
+    $default = array(
+        'users' => array(
+            'name' => __('Люди'), 
+            'url' => '/users.php?q=%query%', 
+            'callback' => 'ds_callback_search_users', 
+        ), 
+    ); 
+
+    foreach($default AS $uid => $args) {
+        ds_register_search($uid, $args); 
+    }
+}
+
+
+/**
+* Добавляет строку в лог файл
+* */
+
+function add_log($str, $type = 'message') 
+{
+    $log = ROOTPATH . '/sys/tmp/system-log.txt'; 
+
+    if (!is_file($log)) {
+        file_put_contents($log, ''); 
+    }
+
+    if (is_writable($log)) {
+        if (!$handle = fopen($log, 'a')) {
+            return false; 
+        }
+
+        if (fwrite($handle, '['.$type.'] ' . date('Y-m-d H:i:s') . ' "' . $str . "\"\n") === FALSE) {
+            return false; 
+        }
+
+        fclose($handle);
+        return true; 
+    }
+
+    return false; 
 }

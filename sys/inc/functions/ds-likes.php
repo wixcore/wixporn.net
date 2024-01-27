@@ -2,10 +2,10 @@
 
 function handle_likes_init() 
 {
-	add_event('ajax_ds-like_callback', 'ajax_toggle_like'); 
+	add_event('ajax_ds-like_callback', 'ajax_toggle_likes'); 
 }
 
-function ajax_toggle_like() 
+function ajax_toggle_likes() 
 {
 	$uid = (int) $_POST['uid']; 
 	$tbl = $_POST['type']; 
@@ -14,7 +14,7 @@ function ajax_toggle_like()
 		return ;
 	}
 
-	$result = toggle_like($tbl, get_user_id(), $uid);
+	$result = toggle_likes($tbl, get_user_id(), $uid);
 	$item = db::fetch("SELECT `likes` FROM `" . $tbl . "` WHERE `id` = '" . $uid . "' LIMIT 1"); 
 
 	die(json_encode(array(
@@ -23,10 +23,9 @@ function ajax_toggle_like()
 	))); 
 }
 
-function toggle_like($tbl, $user_id, $object_id) 
+function toggle_likes($tbl, $user_id, $object_id) 
 {
-	$like = db::fetch("SELECT user_id FROM `" . $tbl . "_likes` WHERE user_id = '$user_id' AND `object_id` = '$object_id' LIMIT 1"); 
-
+	$like = db::fetch("SELECT user_id FROM `" . $tbl . "_likes` WHERE user_id = '$user_id' AND `object_id` = '$object_id' LIMIT 1");
 	$sql_args = array(
 		'user_id' => $user_id, 
 		'object_id' => $object_id,

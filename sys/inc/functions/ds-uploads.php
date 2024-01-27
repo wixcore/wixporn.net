@@ -1,5 +1,110 @@
 <?php 
 
+/**
+* Добавляет связь файла вложения с объектом
+* @return array
+*/ 
+function add_object_attachments($files, $args) 
+{
+	$attachments = array(); 
+
+	if (is_array($files)) {
+		foreach($files AS $file) {
+			$data = array_merge(array('file_id' => $file, 'time' => time(), 'user_id' => get_user_id()), $args); 
+			db::insert('files_attachments', $data); 
+			$attachments[] = db::insert_id(); 
+		}
+	} elseif (is_numeric($files)) {
+		$data = array_merge(array('file_id' => $files, 'time' => time(), 'user_id' => get_user_id()), $args); 
+		db::insert('files_attachments', $data); 
+		$attachments[] = db::insert_id(); 
+	}
+
+	do_event('ds_files_attachments', $attachments, $files, $args); 
+
+	return $attachments; 
+}
+
+/**
+* Удаляет связь файла вложения с объектами
+*/ 
+function clear_object_attachments($file) 
+{
+	$q = db::query("SELECT * FROM `files_attachments` WHERE `file_id` = '" . $file['id'] . "'"); 
+
+	while($post = $q->fetch_assoc()) : 
+		switch ($post['object']) {
+			case 'comment':
+				$comment = db::fetch("SELECT * FROM `" . $post['param2'] . "` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+
+				if (isset($comment['id'])) {
+					$array = get_text_array($comment['msg']);
+
+					if (is_array($array['data']['attachments'])) {
+						$key = array_search($file['id'], $array['data']['attachments']);
+						unset($array['data']['attachments'][$key]); 
+
+				        if (empty($array['content'])) {
+				        	db::query("DELETE FROM `" . $post['param2'] . "` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+				        } else {
+					        $content = '<!-- CMS-Social Data {{' . serialize($array['data']) . '}} -->' . "\r";
+					        $content .= $array['content']; 
+				        	db::query("UPDATE `" . $post['param2'] . "` SET `msg` = '" . $content . "' WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+				        }
+					}
+				}
+				break; 
+
+
+			case 'mail':
+				$mail = db::fetch("SELECT * FROM `mail` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+
+				if (isset($mail['id'])) {
+					$array = get_text_array($mail['msg']);
+
+					if (is_array($array['data']['attachments'])) {
+						$key = array_search($file['id'], $array['data']['attachments']);
+						unset($array['data']['attachments'][$key]); 
+
+				        if (empty($array['content'])) {
+				        	db::query("DELETE FROM `mail` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+				        } else {
+					        $content = '<!-- CMS-Social Data {{' . serialize($array['data']) . '}} -->' . "\r";
+					        $content .= $array['content']; 
+				        	db::query("UPDATE `mail` SET `msg` = '" . $content . "' WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+				        }
+					}
+				}
+				break; 
+
+			case 'feed': 
+				$feed = db::fetch("SELECT * FROM `feeds` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
+				$array = unserialize($feed['content']); 
+
+				if (is_array($array)) {
+					$key = array_search($post['id'], $array); 
+
+					if ($key) {
+						unset($array[$key]); 
+						if (count($array) > 0) {
+							update_user_feed($feed['id'], $array);
+						} else {
+							delete_user_feed($feed['id']);
+						}
+					}					
+				}
+
+				break;
+
+			default:
+				do_event("clear_" . $post['object'] . "_attachments", $file['id'], $post['object'], $post['object_id'], $post); 
+				break; 
+		}
+	endwhile; 
+
+	db::query("DELETE FROM `files_attachments` WHERE `file_id` = '" . $file['id'] . "'"); 
+}
+
 function delete_dir( $dir )
 {
     if ( is_dir( $dir ) ) {
@@ -397,6 +502,11 @@ function ds_file_thumbnail($file, $size = 'thumbnail')
 	}
 
 	$thumbnail = get_file_thumbnail($file, $size); 
+
+	if (!$thumbnail) {
+		return ;
+	}
+
 	$thumbnail_template = use_filters('ds_thumbnail_template', '<img class="%class%" src="%src%" width="' . $thumbnail['width'] . '" height="' . $thumbnail['height'] . '" alt="%alt%" />', $thumbnail, $file); 
 
 	$classes = array(
@@ -1151,7 +1261,7 @@ function register_files_type($uid, $args)
 	$files_types = ds_get('ds_files_types', array());
 
 	if (!isset($files_types[$uid])) {
-		$files_types[$uid] = $args; 
+		$files_types[$uid] = use_filters('ds_register_files_type', $args, $uid); 
 		ds_set('ds_files_types', $files_types);
 		return true; 
 	}
@@ -1562,8 +1672,8 @@ function add_file_relation($file_id, $term_id, $user_id)
 
 function get_basename($path) 
 {
-	 $ext = strtolower(substr($path, strrpos($path, '.') + 1)); 
-	 return basename($path, '.'.$ext);
+	$ext = strtolower(substr($path, strrpos($path, '.') + 1)); 
+	return basename($path, '.'.$ext);
 }
 
 function get_files_accesses() 
@@ -1893,12 +2003,21 @@ function get_audio_player($file)
 	$src = get_file_download_url($file); 
 	$meta = get_files_meta($file['id']); 
 
+	$volume = 100; 
+	if (isset($_COOKIE['playerData'])) {
+		$data = json_decode($_COOKIE['playerData'], true); 
+
+		if ($data['volume'] >= 0 && $data['volume'] <= 1) {
+			$volume = ($data['volume'] * 100); 
+		}
+	}
+
 	$player = '<div class="dpl" data-title="' . text($file['title']) . '" data-id="' . $file['id'] . '" data-src="' . $src . '" data-hash="' . md5($src) . '" data-uniquie="' . md5($src . mt_rand(1, 9999999)) . '">'; 
 	$player .= '<div class="dpl-toggle"></div>';
 	$player .= '<div class="dpl-title">' . text($file['title']) . '</div>';
 	$player .= '<div class="dpl-progress" onclick="setPlayerSeeked(this);"><div class="dpl-progress-loaded"></div><div class="dpl-progress-bar"></div></div>';
 	$player .= '<div class="dpl-time">0:00</div>';
-	$player .= '<div class="dpl-volume"><div class="dpl-volume-bar"></div></div>';
+	$player .= '<div class="dpl-volume"><div class="dpl-volume-bar" style="width: ' . $volume . '%;"></div></div>';
 	$player .= '</div>';
 
 	return use_filters('get_audio_player', $player, $file); 

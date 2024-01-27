@@ -2,7 +2,7 @@
 
 if ($term['parent'] == 0 && $term['path'] == 0) {
 	ds_die(__('У вас нет доступа')); 
-} elseif (!is_user_access('loads_file_delete') && get_user_id() != $term['user_id']) {
+} elseif (!is_user_access('user_files_delete') && get_user_id() != $term['user_id']) {
 	ds_die(__('У вас нет доступа')); 
 }
 

@@ -4,8 +4,7 @@ $user_id = (isset($_GET['id']) ? (int) $_GET['id'] : (is_user() ? get_user_id() 
 $ank = get_user($user_id);
 
 if (empty($ank['id'])) {
-    header("Location: /404.php");
-    exit;
+    ds_redirect("/404.php");
 }
 
 // Загрузка конструктора профиля
@@ -20,16 +19,7 @@ get_header();
 // Основное событие профиля
 do_event('ds_profile', $ank['id']); 
 
-/*
-$args = array(
-	'author_id' => $ank['id'], 
-); 
-
-$query = new DB_Feeds($args); 
-
-foreach($query->items AS $feed) {
-	ds_output_feed($feed); 
-}
-*/
+// Событие после отображения профиля
+do_event('ds_profile_loaded', $ank['id']); 
 
 get_footer(); 

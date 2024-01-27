@@ -1,5 +1,56 @@
 <?php 
 
+/**
+ * Причины бана пользователя
+ * @return array 
+ * */ 
+
+function get_ban_reasons() 
+{
+    $reasons = use_filters('ds_user_reason_list', array(
+        'spam' => __('Спам или реклама'), 
+        'fraud' => __('Мошенничество'), 
+        'offense' => __('Оскорбления и мат'), 
+        'other' => __('Другое'), 
+    )); 
+
+    return $reasons; 
+}
+
+/**
+* Callback функция для поиска пользователей
+*/
+function ds_callback_search_users($search) {
+    $sql_where = sql_search_where_users($search); 
+    return db::count("SELECT COUNT(id) FROM `user` WHERE " . $sql_where . "");
+}
+
+/**
+* Вспомогательная функция которая формирует SQL 
+* запрос для WHERE поиска пользователей
+* @return string
+*/ 
+function sql_search_where_users($search) {
+    $exp = explode(' ', $search); 
+    $where = array(); 
+
+    if (count($exp) > 1) {
+        $tmp = array(); 
+        foreach($exp AS $str) 
+            $tmp[] = "user.first_name LIKE '%" . db::esc($str) . "%' OR user.last_name LIKE '%" . db::esc($str) . "%'"; 
+
+        $where[] = "(".join(' OR ', $tmp).")";
+    } else {
+        $where[] = "user.nick LIKE '%" . db::esc($search) . "%' OR user.first_name LIKE '%" . db::esc($search) . "%' OR user.last_name LIKE '%" . db::esc($search) . "%'"; 
+    }
+
+    if (is_numeric($search)) {
+        $where[] = "user.id = '" . intval($search) . "'"; 
+    }
+
+    return "1=1 AND " . join(' OR ', $where) . ""; 
+}
+
 /** 
 * Склонение строк по полу
 * $m       - Строка Муж. 
@@ -161,26 +212,139 @@ function user_collision($massive, $im = 0)
     return $massive;
 }
 
+/**
+ * Регистрирует роль пользователя
+ * */ 
+function register_user_role($uid, $title, $level) 
+{
+    $user_roles = ds_get('user_roles', array()); 
+
+    if (!isset($user_roles[$uid])) {
+        $user_roles[$uid] = array(
+            'title' => $title, 
+            'level' => $level, 
+        ); 
+    }
+
+    ds_set('user_roles', $user_roles); 
+}
+
+/**
+ * Регистрирует уровни доступа
+ * */ 
+function register_user_access($uid, $title) 
+{
+    $all_accesses = ds_get('all_accesses', array()); 
+
+    if (!isset($all_accesses[$uid])) {
+        $all_accesses[$uid] = $title; 
+    }
+
+    ds_set('all_accesses', $all_accesses); 
+}
+
+/**
+ * Инициализирует группы доступа
+ * */
+function setup_user_access() 
+{
+    $roles = array(
+        1  => array('level' => 0,  'title' => __('Пользователь')), 
+        7  => array('level' => 2,  'title' => __('Модератор')), 
+        8  => array('level' => 3,  'title' => __('Администратор')), 
+        9  => array('level' => 9,  'title' => __('Главный администратор')), 
+        15 => array('level' => 10, 'title' => __('Создатель')), 
+    ); 
+    
+    ds_set('user_roles', $roles);
+
+    /**
+     * Хук-событие для регистрации новых ролей пользователя
+     * */
+    do_event('register_user_access', $roles); 
+
+    $default = array(
+        'adm_panel_show'     => __('Админка - Главная'),
+        'adm_users_list'     => __('Админка - Список пользователей'),
+        'adm_accesses'       => __('Админка - Группы пользователей'),
+        'adm_set_sys'        => __('Админка - Настройки системы'),
+        'adm_themes'         => __('Админка - Темы оформления'),
+        'plugins'            => __('Админка - Плагины'), 
+        'update_core'        => __('Админка - Центр обновлений'),
+        'adm_info'           => __('Админка - Общая информация'),
+
+        'user_files_edit'    => __('Медиафайлы - Редактирование'), 
+        'user_files_delete'  => __('Медиафайлы - Удаление'), 
+
+        'user_ban_set'       => __('Пользователи - Блокировка'),
+        'user_ban_unset'     => __('Пользователи - Снятие блокировки'),
+        
+        'user_group'         => __('Пользователи - Назначение ролей'),
+        'user_edit'          => __('Пользователи - Редактирование профиля'),
+        'user_delete'        => __('Пользователи - Удаление профиля'),
+    ); 
+
+    /**
+     * Хук-событие для регистрации новых прав доступа
+     * */
+    do_event('register_user_access', $default); 
+
+    $registered = ds_get('all_accesses', array()); 
+    $all_accesses = array_merge($default, $registered);
+
+    ds_set('all_accesses', $all_accesses);
+}
+
+/**
+ * Возвращает список зарегистрированых ролей
+ * @return array
+ * */ 
+function get_user_roles($role_id = null) {
+    $roles = ds_get('user_roles', array());
+
+    if ($role_id != null) {
+        if (isset($roles[$role_id]))
+            return $roles[$role_id]; 
+        else
+            return null; 
+    } else {
+        return $roles; 
+    }
+}
+
+/**
+ * Возвращает список всех прав доступа
+ * @return array
+ * */
+function get_user_accesses() 
+{
+    $all_accesses = ds_get('all_accesses', array()); 
+    return $all_accesses; 
+}
+
 function user_access( $access, $u_id = null, $exit = false )
 {
-    if ( $u_id == null )
+    if ($u_id == null)
         global $user;
     else
-        $user = get_user( $u_id );
-    if ( !isset( $user['group_access'] ) || $user['group_access'] == null ) {
-        if ( $exit !== false ) {
+        $user = get_user($u_id);
+
+    if (!isset( $user['group_access'] ) || $user['group_access'] == null) {
+        if ($exit !== false) {
             header( 'Location: ' . $exit );
             exit;
-        } else
+        } else {
             return false;
+        }
     }
+
     if ( $exit !== false ) {
-        if ( db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '$user[group_access]' AND `id_access` = '" . my_esc( $access ) . "'") == 0 ) {
+        if (db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '$user[group_access]' AND `id_access` = '" . my_esc($access) . "'") == 0) {
             header( "Location: $exit" );
             exit;
         }
     } else
-        return ( db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '$user[group_access]' AND `id_access` = '" . my_esc( $access ) . "'") == 1 ? true : false );
+        return ( db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '$user[group_access]' AND `id_access` = '" . my_esc( $access ) . "'") >= 1 ? true : false );
 }
 
 function shif( $str )
@@ -190,9 +354,10 @@ function shif( $str )
 
 function cookie_encrypt($data, $id = 0)
 {
-    $key = defined('SALT_COOKIE_USER') ? SALT_COOKIE_USER : md5(get_user_ip()); 
+    $key = defined('SALT_COOKIE_USER') ? SALT_COOKIE_USER : md5(get_ip_address()); 
 
     $l = strlen($key);
+
     if ($l < 16)
         $key = str_repeat($key, ceil(16/$l));
 
@@ -210,7 +375,7 @@ function cookie_encrypt($data, $id = 0)
 
 function cookie_decrypt($data, $id = 0)
 {
-    $key = defined('SALT_COOKIE_USER') ? SALT_COOKIE_USER : md5(get_user_ip()); 
+    $key = defined('SALT_COOKIE_USER') ? SALT_COOKIE_USER : md5(get_ip_address()); 
     $data = base64_decode($data); 
 
     $l = strlen($key);
@@ -231,39 +396,6 @@ function get_salt()
 {
     $hash = md5(SALT_COOKIE_USER);
     return $hash; 
-}
-
-function online($user = NULL)
-{
-    global $set, $time;
-    static $users;
-    
-    if (!isset($users[$user]))
-    {
-        if (db::count("SELECT COUNT(id) FROM `user` WHERE `id` = '$user' AND `date_last` > '" . (time() - 60) . "' LIMIT 1") == 1)
-        {
-            if ($set['show_away'] == 0)$on = 'online';
-            else
-            {
-                $ank = db::fetch("SELECT `date_last` FROM `user` WHERE `id` = '$user' LIMIT 1", ARRAY_A);
-                if ((time() - $ank['date_last']) == 0)
-                $on = 'online';
-                else
-                $on = 'away: ' . (time() - $ank['date_last']) . ' сек';
-            }
-            $ank = db::fetch("SELECT * FROM `user` WHERE `id` = '$user' LIMIT 1", ARRAY_A);
-
-            if ($ank['browser'] == 'wap')
-                $users[$user] = " <img src='/style/icons/online.gif' alt='*' /> ";
-            else
-                $users[$user] = " <img src='/style/icons/online_web.gif' alt='*' /> ";
-        }
-        else
-        {
-            $users[$user]=null;
-        }
-    }
-    return $users[$user];
 }
 
 // только для зарегистрированых
@@ -313,8 +445,11 @@ function is_user_access($access, $user_id = '')
         return false; 
     }
 
-    $is_group_access = db::count("SELECT COUNT(`id_group`) FROM `user_group_access` 
-                                WHERE `id_group` = '" . $user['group_access'] . "' AND `id_access` = '" . $access . "'"); 
+    if (!is_array($access)) {
+        $access = array($access); 
+    }
+
+    $is_group_access = db::count("SELECT COUNT(`id_group`) FROM `user_group_access` WHERE `id_group` = '" . $user['group_access'] . "' AND `id_access` IN('" . join("', '", $access) . "')"); 
 
     return ($is_group_access ? true : false);
 }
@@ -338,10 +473,10 @@ function is_auth_user($value, $password, $key = 'id')
 
     if (isset($user['id'])) {
         if (!isset($ds_users_cache[$user['group_access']])) {
-            $group_access = get_group_access($user['group_access']);
+            $group_access = get_user_roles($user['group_access']);
 
             $user['level'] = $group_access['level'];
-            $user['group_name'] = $group_access['group_name'];
+            $user['group_name'] = $group_access['title'];
 
             $ds_users_cache[$user['id']] = use_filters('ds_users_cache_add', $user); 
         }
@@ -504,14 +639,17 @@ function get_user($user_id = false)
             $ds_users[$user_id] = db::fetch("SELECT * FROM `user` WHERE `id` = '$user_id' LIMIT 1", ARRAY_A);
 
             if (isset($ds_users[$user_id]['id'])) {
-                $group_access = get_group_access($ds_users[$user_id]['group_access']);
+                $group_access = get_user_roles($ds_users[$user_id]['group_access']);
 
-                if ( $group_access['group_name'] == null ) {
+                $ban = db::fetch("SELECT id FROM `ban` WHERE `user_id` = '$user_id' AND `time_until` > '" . time() . "' LIMIT 1", ARRAY_A);
+                $ds_users[$user_id]['ban'] = (isset($ban['id']) ? 1 : 0);
+
+                if ( $group_access == null ) {
                     $ds_users[$user_id]['level']      = 0;
-                    $ds_users[$user_id]['group_name'] = 'Пользователь';
+                    $ds_users[$user_id]['group_name'] = __('Пользователь');
                 } else {
                     $ds_users[$user_id]['level']      = $group_access['level'];
-                    $ds_users[$user_id]['group_name'] = $group_access['group_name'];
+                    $ds_users[$user_id]['group_name'] = $group_access['title'];
                 }
             } else {
                 $ds_users[$user_id] = false;
@@ -561,23 +699,27 @@ function get_user_profile($user_id = null)
 }
 
 /**
-* Получает и кеширует группу пользователя
-* $group_id ID группы
-* @return array 
+* Изменяет доступ группы
 */ 
-function get_group_access($group_id) 
+function set_group_access($group_id, $access_id, $action) 
 {
-    global $ds_group_accesses; 
+    $access = db::fetch("SELECT * FROM `user_group_access` WHERE `id_group` = '" . $group_id . "' AND `id_access` = '" . $access_id . "' LIMIT 1", ARRAY_A);
 
-    if (!isset($ds_group_accesses[$group_id])) {
-        $group_access = db::fetch("SELECT `level`, `name` AS `group_name` 
-                                                        FROM `user_group` 
-                                                        WHERE `id` = '" . (int) $group_id . "' LIMIT 1", ARRAY_A);
+    if ($action == 'add') {
+        if (empty($access)) {
+            db::insert('user_group_access', [
+                'id_group' => $group_id, 
+                'id_access' => $access_id, 
+            ]);             
+        }
+    } 
 
-        $ds_group_accesses[$group_id] = $group_access;
+    elseif ($action == 'delete') {
+        db::delete('user_group_access', [
+            'id_group' => $group_id, 
+            'id_access' => $access_id, 
+        ]);   
     }
-
-    return $ds_group_accesses[$group_id]; 
 }
 
 /**
@@ -653,6 +795,60 @@ function delete_user_meta($user_id, $meta_key = NULL, $meta_value = NULL)
     }
 }
 
+/**
+* @since 3.0.8
+*
+* Подсчитывает сколько лет пользователю
+* @return string
+*/
+function get_user_years($ank) 
+{
+    if (is_numeric($ank)) {
+        $ank = get_user($ank); 
+    }
+
+    if (!$ank['birthdate'] || $ank['birthdate'] == "0000-00-00") {
+        return ''; 
+    }
+
+    $strings = array(__('год'), __('года'), __('лет')); 
+
+    $date_a = new DateTime($ank['birthdate']);
+    $date_b = new DateTime();
+    $interval = $date_b->diff($date_a);
+
+    return des2num($interval->y, $strings); 
+}
+
+/**
+* @since 3.0.8
+*
+* Краткая информация о пользователе
+* @return string
+*/
+function get_user_shortinfo($ank) 
+{
+    if (is_numeric($ank)) {
+        $ank = get_user($ank); 
+    }
+
+    $fullname = text($ank['first_name'] . ' ' . $ank['last_name']); 
+    $age = get_user_years($ank); 
+
+    $info = array(); 
+
+    if (trim($fullname)) {
+        $info['fullname'] = $fullname; 
+    }
+
+    if ($age) {
+        $info['age'] = $age; 
+    }
+
+    $info = use_filters('ds_user_shortinfo_data', $info, $ank); 
+
+    return use_filters('ds_user_shortinfo', join(', ', $info), $info, $ank); 
+}
 
 /**
 * Генератор пароля
@@ -675,13 +871,13 @@ function passgen($k_simb = 8, $types = 3)
         switch ($type) 
         {        
             case 3:        
-            $password .= $large[mt_rand(0, strlen($large) - 1)];            
+                $password .= $large[mt_rand(0, strlen($large) - 1)];            
             break;            
             case 2:            
-            $password .= $small[mt_rand(0, strlen($small) - 1)];            
+                $password .= $small[mt_rand(0, strlen($small) - 1)];            
             break;            
             case 1:            
-            $password .= $numbers[mt_rand(0,9)];            
+                $password .= $numbers[mt_rand(0,9)];            
             break;        
         }    
     }    
@@ -745,6 +941,11 @@ function get_user_counters($user_id = false)
         'count' => db::count("SELECT COUNT(`mail`.`id`) FROM `mail`
              LEFT JOIN `mail_contacts` ON `mail`.`user_id` = `mail_contacts`.`contact_id` AND `mail_contacts`.`user_id` = '" . $user_id . "'
              WHERE `mail`.`contact_id` = '" . $user_id . "' AND `mail_contacts`.`status` != 'ignore' AND `mail`.`read` = '0'"), 
+    ); 
+
+    $counter[$user_id]['notify'] = array(
+        'title' => __('Уведомления'), 
+        'count' => db::count("SELECT COUNT(*) FROM `notification` WHERE `user_id` = '" . $user_id . "' AND `read` = '0'"), 
     ); 
 
     ds_set('ds_user_counters', $counter); 
@@ -895,24 +1096,28 @@ function get_profile_media($user_id)
 { 
     $ank = get_user($user_id); 
 
+    if ($ank['ban']) {
+        return ;
+    }
+
     $menu['photos'] = array(
         'link' => get_site_url('/photos/index/' . $ank['nick'] . '/'), 
         'title' => __('Фотографии'), 
-        'icon' => '<img src="' . get_site_url('/style/icons/foto.png') . '" alt="Photo" />', 
+        'icon' => '<i class="fa fa-picture-o" aria-hidden="true"></i>', 
         'count' => get_count_files_user($user_id, 'photos'), 
     ); 
 
     $menu['files'] = array(
         'link' => get_site_url('/files/index/' . $ank['nick'] . '/'), 
         'title' => __('Файлы'), 
-        'icon' => '<img src="' . get_site_url('/style/icons/files.gif') . '" alt="Files" />', 
+        'icon' => '<i class="fa fa-folder-o" aria-hidden="true"></i>', 
         'count' => get_count_files_user($user_id, 'files'), 
     ); 
 
     $menu['music'] = array(
         'link' => get_site_url('/music/index/' . $ank['nick'] . '/'), 
         'title' => __('Музыка'), 
-        'icon' => '<img src="' . get_site_url('/style/icons/foto.png') . '" alt="Music" />', 
+        'icon' => '<i class="fa fa-music" aria-hidden="true"></i>', 
         'count' => get_count_files_user($user_id, 'music'), 
     ); 
 
@@ -921,10 +1126,16 @@ function get_profile_media($user_id)
 
 function get_profile_anketa($user_id) 
 {
+    $ank = get_user($user_id);
+
+    if ($ank['ban']) {
+        return ;
+    }
+
     $menu['anketa'] = array(
         'link' => get_site_url('/user/anketa/?id=' . $user_id), 
         'title' => __('Анкета'), 
-        'icon' => '<img src="' . get_site_url('/style/icons/anketa.gif') . '" alt="Anketa" />', 
+        'icon' => '<i class="fa fa-file-text-o" aria-hidden="true"></i>', 
     ); 
 
     return get_profile_menu(use_filters('get_profile_menu_anketa', $menu)); 
@@ -932,19 +1143,59 @@ function get_profile_anketa($user_id)
 
 function get_profile_friends($user_id) 
 {
+    $ank = get_user($user_id);
+
+    if ($ank['ban']) {
+        return ;
+    }
+
+    $count = get_friends_counters($user_id); 
+
     $menu['friends'] = array(
         'link' => get_friends_link($user_id), 
         'title' => __('Друзья'), 
-        'icon' => '<img src="' . get_site_url('/style/icons/druzya.png') . '" alt="Friends" />', 
-        'count' => db::count("SELECT COUNT(*) FROM `frends` WHERE `user` = '$user_id' AND `i` = '1'"), 
+        'icon' => '<i class="fa fa-users" aria-hidden="true"></i>', 
+        'count' => $count['friends'], 
     ); 
 
     return get_profile_menu(use_filters('get_profile_menu_friends', $menu)); 
 }
 
+function get_profile_ban($user_id) {
+    $ank = get_user($user_id);
+
+    if ($ank['ban'] == 0) {
+        return ;
+    }
+    
+    $htmlTpl = array(); 
+
+    $q = db::query("SELECT * FROM `ban` WHERE `user_id` = '$user_id' AND `time_until` > '" . time() . "' ORDER BY `time_until` DESC");
+
+    while ($item =  $q->fetch_assoc()) {
+        $info = array(__('Кто заблокировал: %s', '<a href="' . get_user_url($item['banned_id']) . '">' . get_user_nick($item['banned_id']) . '</a>')); 
+        $info[] = __('Дата блокировки: %s', vremja($item['time_create'])); 
+
+        if ($item['comment']) {
+            $info[] = '<p>' . __('Комментарий: %s', output_text($item['comment'])) . '</p>'; 
+        }
+
+        $htmlTpl[] = '<div class="ds-ban-title">' . __('Действует до: %s', $item['forever'] == 0 ? vremja($item['time_until']) : __('Навсегда')) . '</div>';
+        $htmlTpl[] = '<div class="ds-ban-info">' .join('<br />', $info) . '</div>';
+
+    }
+    
+    return join('', $htmlTpl); 
+}
+
 function get_profile_action($user_id) 
 {
-    $ank = get_user($user_id); 
+    $ank = get_user($user_id);
+
+    if ($ank['ban']) {
+        return ;
+    }
+ 
     $menu = array(); 
 
     if (get_user_id() && $ank['id'] != get_user_id()) 
@@ -952,7 +1203,7 @@ function get_profile_action($user_id)
         $menu['message'] = array(
             'link' => get_site_url('/mail.php?id=' . $user_id), 
             'title' => __('Написать сообщение'), 
-            'icon' => '<img src="' . get_site_url('/style/icons/pochta.gif') . '" alt="Message" />', 
+            'icon' => '<i class="fa fa-envelope-o" aria-hidden="true"></i>', 
         );     
 
         $labels = array(
@@ -975,13 +1226,13 @@ function get_profile_action($user_id)
                 $menu['friends_' . $key] = array(
                     'link' => $link['url'], 
                     'title' => $link['title'], 
-                    'icon' => '<img src="' . get_site_url('/style/icons/druzya.png') . '" />', 
+                    'icon' => '<i class="fa fa-user" aria-hidden="true"></i>', 
                 );               
             } else {
                 $menu['friends_' . $key] = array(
                     'link' => $link['url'], 
                     'title' => $link['title'], 
-                    'icon' => '<img src="' . get_site_url('/style/icons/druzya.png') . '" />', 
+                    'icon' => '<i class="fa fa-user" aria-hidden="true"></i>', 
                 ); 
             }
         }
@@ -991,7 +1242,7 @@ function get_profile_action($user_id)
         $menu['settings'] = array(
             'link' => get_site_url('/user/settings/'), 
             'title' => __('Мои настройки'), 
-            'icon' => '<img src="' . get_site_url('/style/icons/settings.png') . '" alt="Settings" />', 
+            'icon' => '<i class="fa fa-gear" aria-hidden="true"></i>', 
             'template' => '<div class="ds-profile-group"><a href="%link" class="%class">%icon %title</span></a> | <a class="%class" href="' . get_site_url('/umenu.php') . '">' . __('Меню') . '</a></div>', 
         );     
     }
@@ -1005,6 +1256,15 @@ function get_profile_action($user_id)
 function ds_profile_view($user_id) 
 {
     $ank = get_user($user_id); 
+
+    if ($ank['ban'] == 1) {
+        $profile_ban_template = use_filters('ds_profile_ban_template', null, $ank); 
+
+        if ($profile_ban_template !== null) {
+            echo $profile_ban_template; 
+            return ; 
+        }
+    }
 
     // Зарегистрированные области 
     $boxes = get_profile_boxes(); 
@@ -1032,7 +1292,7 @@ function ds_profile_view($user_id)
 }
 
 /**
-* Регистрируем стандартный профиля пользователя
+* Регистрируем стандартный профиль пользователя
 */ 
 function ds_profile_load() 
 {
@@ -1049,6 +1309,12 @@ function ds_profile_load()
     add_profile_item('ds_profile_head', array(
         'function' => 'get_profile_avatar', 
         'class'    => 'ds-profile-avatar', 
+    )); 
+
+    // Информация о бане
+    add_profile_item('ds_profile_head', array(
+        'function' => 'get_profile_ban', 
+        'class'    => 'ds-profile-ban', 
     )); 
 
     // Область меню пользователя

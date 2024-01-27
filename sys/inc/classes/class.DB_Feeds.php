@@ -57,6 +57,8 @@ class DB_Feeds
 			$where[] = "(feeds.user_id = '" . $args['author_id'] . "')";
 		}
 		
+		$where[] = "NOT EXISTS (SELECT id FROM ban WHERE feeds.user_id = ban.user_id AND ban.time_until > '" . time() . "')";
+		
 		if (isset($args['where'])) {
 			if (is_array($args['where'])) { 
 				$where[] = db::get_construct_query_where('feeds', $args['where'], ''); 
@@ -74,8 +76,10 @@ class DB_Feeds
 			$SQLConst['%limit%'] = "LIMIT " . $start . ", " . $args['p_str']; 
 		}
 
-		$SQLCount = str_replace(array_keys($SQLConst), array_values($SQLConst), "SELECT COUNT(%select%) FROM feeds %join% WHERE 1=1 %where%"); 
+		$SQLCount = str_replace(array_keys($SQLConst), array_values($SQLConst), "SELECT COUNT(feeds.id) FROM feeds %join% WHERE 1=1 %where%"); 
+
 		$this->total = db::count($SQLCount); 
+		
 		if ($this->total > $this->args['p_str']) {
 			$this->pages = ceil($this->total / $this->args['p_str']); 
 		}
@@ -92,7 +96,7 @@ class DB_Feeds
 				$ids[] = $item['id']; 
 			}
 
-			$likes = db::get_row("SELECT `object_id` FROM `feeds_likes` WHERE `user_id` = '" . $user_id . "' AND `object_id` IN(" . join(',', $ids) . ")"); 
+			$likes = db::get_var("SELECT `object_id` FROM `feeds_likes` WHERE `user_id` = '" . $user_id . "' AND `object_id` IN(" . join(',', $ids) . ")", true); 
 		}
 
 		foreach($items AS $key => $value) {

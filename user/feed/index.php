@@ -18,4 +18,8 @@ foreach($query->items AS $feed) {
 	ds_output_feed($feed); 
 }
 
+if ( $query->pages > 1 ) {
+    str('?', $query->pages, $query->paged);
+}
+	
 get_footer(); 

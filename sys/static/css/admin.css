@@ -199,10 +199,10 @@ input[type="submit"] {
 .form-group label {
     cursor: pointer;
 }
-.form-group label.d-block {
+.form-group .d-block {
     display: block;
 }
-.form-group label.label-title {
+.form-group .label-title {
     color: gray;
 }
 
@@ -582,6 +582,33 @@ ul.submenu {
 }
 
 
+.ds-tabs .ui-tabs-panel {
+    padding: 10px;
+}
+
+.ds-tabs .ui-tabs-anchor {
+    outline: 0;
+}
+
+.ds-tabs .ui-tabs-nav {
+    margin: 0;
+    padding: 10px 10px 0 10px;
+    border: 0;
+    background: #f1f1f1;
+    border-bottom: 1px solid #c5c5c5;
+    border-radius: 0;
+}
+
+.ui-state-active, 
+.ui-widget-content .ui-state-active, 
+.ui-widget-header .ui-state-active, 
+a.ui-button:active, 
+.ui-button:active, 
+.ui-button.ui-state-active:hover {
+    border: 1px solid #248bbd;
+    background: #2799d0;
+}
+
 .widgets {
     display: flex;
     justify-content: space-between;
@@ -604,10 +631,6 @@ ul.submenu {
     height: 100px; 
     width: 100%; 
     background-color: #e9e9ef; 
-}
-
-.ui-droppable-active .box-item {
-    
 }
 
 .ui-move-handle .fa {
@@ -637,6 +660,10 @@ ul.submenu {
     background-color: #fff;
     box-shadow: 0 0 4px -2px grey;
     padding: 10px;
+}
+
+.widget-ui-edit {
+    cursor: pointer;
 }
 
 .widget-title {

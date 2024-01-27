@@ -4,7 +4,12 @@ if (!defined('ROOTPATH')) {
 	die(__('Access denied')); 
 }
 
-$set['title'] = __('Друзья'); 
+if ($uid == get_user_id()) {
+	$set['title'] = __('Мои друзья'); 
+} else {
+	$set['title'] = __('Друзья %s', get_user_nick($uid)); 
+}
+
 get_header(); 
 
 $section = (isset($_GET['section']) ? $_GET['section'] : 'friends'); 
@@ -12,12 +17,10 @@ $counters = get_friends_counters($uid);
 
 $sortAction = use_filters('ds_friends_sort_action', array(
 	'friends'       => __('Все друзья'), 
-	'online'        => __('Друзья онлайн'), 
 	'requests'      => __('Заявки в друзья'), 
 	'subscribers'   => __('Подписчики'), 
 	'subscriptions' => __('Подписки'), 
 	'out_requests'  => __('Мои заявки'), 
-	'locked'         => __('Заблокированные'), 
 ));  
 
 foreach($sortAction AS $key => $item) { 
@@ -36,7 +39,7 @@ foreach($sortAction AS $key => $item) {
 
 	$action_nav[] = array(
 		'%link%' => $url, 
-		'%count%' => (isset($counters[$key]) ? $counters[$key] : 0), 
+		'%count%' => (isset($counters[$key]) ? $counters[$key] : ''), 
 		'%title%' => $item, 
 		'%class%' => join(' ', $classes), 
 	); 	
@@ -58,7 +61,6 @@ foreach($action_nav AS $key => $value) {
 	$items[] = str_replace(array_keys($value), array_values($value), $template_link); 
 }
 
-
 if (!empty($items)) {
 	echo str_replace(array(
 		'%items%', 
@@ -66,38 +68,6 @@ if (!empty($items)) {
 		join('', $items), 
 	), $template_box); 
 }
-
-/*
-$nav_items = array(
-	array(
-		'title' => 'Все', 
-		'url' => '/info.php', 
-	), 
-	array(
-		'title' => 'Онлайн', 
-		'url' => '/info.php', 
-	), 
-	array(
-		'title' => 'Подписчики', 
-		'url' => '/info.php', 
-	), 
-	array(
-		'title' => 'Заявки в друзья', 
-		'url' => '/info.php', 
-		'children' => array(
-			array(
-				'title' => 'Мои заявки', 
-				'url' => '/info.php', 
-			), 
-		), 
-	), 
-); 
-
-ds_nav_menu(array(
-	'location' => 'nav_friends', 
-	'wrap_menu' => '<ol id="%1$s" class="%2$s">%3$s</ol>', 
-), $nav_items); 
-*/
 
 $args = array(
 	'p_str' => -1, 
@@ -128,5 +98,9 @@ foreach($query->items AS $friend_id) {
 }
 
 echo str_replace('%content%', $content, $template_box); 
+
+if ( $query->pages > 1 ) {
+    str('?', $query->pages, $query->paged);
+}
 
 get_footer(); 

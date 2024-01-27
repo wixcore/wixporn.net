@@ -2,6 +2,7 @@ var keyUploadCurrent = false;
 
 function maxUploadFileSize() {
 	var maxUploadFileSize = document.getElementById('upload_max_size').value || false; 
+	return maxUploadFileSize; 
 }
 
 var isAdvancedUpload = function() {

@@ -69,7 +69,7 @@ $general_profile = use_filters('ds_profile_general_fields', array(
     <?php 
     $user_actions = array(); 
 
-    if ((is_user() && $user['id'] == $ank['id']) || is_user_access('user_prof_edit')) {
+    if ((is_user() && $user['id'] == $ank['id']) || is_user_access('user_edit')) {
         $user_actions['profile_edit'] = array(
             'url' => get_site_url('/user/anketa/edit.php?id=' . $ank['id']), 
             'title' => __('Редактировать'), 

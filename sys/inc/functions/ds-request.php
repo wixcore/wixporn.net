@@ -66,6 +66,12 @@ function get_query_url($get = array(), $url = '')
     }
 
     $query = array_replace($query, $get); 
+    foreach($query AS $k => $v) {
+        if ($v == 'unset') {
+            unset($query[$k]); 
+        }
+    } 
+    
     $parse['query'] = use_filters('ds_get_query_url', http_build_query($query)); 
 
     $url_build = array(); 

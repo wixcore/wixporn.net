@@ -56,7 +56,6 @@ jQuery(function($) {
 					}
 					let attach = get_template_attachment(file); 
 					attachments.append(attach); 
-	
 				}); 
 			}
 		}); 
@@ -99,8 +98,6 @@ jQuery(function($) {
 				], 
 				onload: function() {
 					var tmp = $(this); 
-
-					//return ;
 
 					$media.upload({
 						file: $media.getFile(uid), 

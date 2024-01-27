@@ -163,15 +163,14 @@ function get_admin_page($page_name)
 function ds_admin_menu_load() 
 {
     add_menu_admin(__('Перейти на сайт'), get_site_url(), 'adm_panel_show', 'fa-home', -1); 
-    add_menu_admin(__('Пользователи'), 'users.php', 'adm_set_sys', 'fa-users', 50); 
-    add_menu_admin(__('Темы оформления'), 'themes.php', 'adm_set_sys', 'fa-paint-brush', 60); 
+    add_menu_admin(__('Пользователи'), 'users.php', 'adm_users_list', 'fa-users', 50); 
+    add_submenu_admin(__('Группы пользователей'), 'accesses.php', 'adm_accesses', 'fa-sliders', 80, 'users.php');
+
+    add_menu_admin(__('Темы оформления'), 'themes.php', 'adm_themes', 'fa-paint-brush', 60); 
     add_submenu_admin(__('Виджеты'), 'widgets.php', 'adm_themes', 'fa-th-list', 20, 'themes.php');
 
     add_menu_admin(__('Настройки'), 'settings.php?page=general', 'adm_set_sys', 'fa-cogs', 80); 
-    add_submenu_admin(__('Группы пользователей'), 'accesses.php', 'adm_accesses', 'fa-sliders', 80, 'users.php');
-
     add_menu_admin(__('Плагины'), 'plugins.php', 'plugins', 'fa-plug', 80); 
-
     add_menu_admin(__('О системе'), 'info.php', 'adm_info', 'fa-life-ring', 99); 
 
     do_event('ds_admin_menu_load'); 
@@ -287,11 +286,16 @@ function do_settings_section($section_id)
 
 function do_settings_fields($page_id) 
 {
+    $page = get_settings_page($page_id); 
+
+    if (is_callable($page['function'])) {
+        add_event('do_settings_fields', $page['function']); 
+    }
+
     do_event('do_settings_fields', $page_id); 
 
-    $page = get_settings_page($page_id); 
     $sections = get_settings_sections($page_id); 
-
+    
     if (!is_array($sections)) {
         return ;
     }
@@ -404,12 +408,12 @@ function ds_admin_settings_load()
     )); 
 
     add_settings_field('general', 'settings_general', array(
-        'title' => __('Анти-Dos'), 
-        'name' => 'antidos', 
+        'title' => __('Перенаправлять HTTP-запросы в HTTPS'), 
+        'name' => 'https', 
         'type' => 'checkbox', 
         'value' => 1, 
         'checked' => '%value', 
-        'description' => '* Анти-Dos - защита от частых запросов с одного IP-адреса', 
+        'description' => '* Автоматически перенаправлять HTTP-запросы к WWW-домену в безопасное HTTPS-соединение', 
     )); 
 
     add_settings_field('general', 'settings_general', array(

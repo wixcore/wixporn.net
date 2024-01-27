@@ -19,7 +19,7 @@ if ($hook_default_avatar === true) {
 			add_error(__('Файл не найден')); 
 		} elseif ($file['user_id'] != $user['id']) {
 			add_error(__('Можно использовать только свои файлы')); 
-		} elseif (!is_mimetype_allowed($file['mimetype'], array('image/jpeg', 'image/png', 'image/png'))) {
+		} elseif (!is_mimetype_allowed($file['mimetype'], array('image/jpeg', 'image/png', 'image/png', 'image/webp'))) {
 			add_error(__('Недопустимый формат изображения'));  
 		} else {
 			update_user_meta($user['id'], '__avatar', $file['id']); 

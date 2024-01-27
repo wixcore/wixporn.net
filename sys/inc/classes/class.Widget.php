@@ -31,7 +31,7 @@ class Widget
 		$this->widget_icon = (isset($args['icon']) ? $args['icon'] : '<i class="fa fa-window-maximize" aria-hidden="true"></i>'); 
 	}
 
-	public function save($widget_id = null, $args) 
+	public function save($widget_id = null, $args = array()) 
 	{
 		if ($widget_id) { 
 			$this->instance = $this->update($this->instance, $_POST); 
@@ -69,6 +69,7 @@ class Widget
 	public function setup($option_id = null) 
 	{
 		$option = get_option($option_id);
+		
 		if ($option) {
 			$data = json_decode($option, true); 
 

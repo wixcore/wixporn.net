@@ -22,6 +22,30 @@ function tag(tagBefore, tagAfter, uid) {
 	document.getElementById(uid).focus();
 }
 
+function emoji(uid, symbol) {
+	$('#ds_editor_modal').fadeOut(200).attr('data-active', false).html(''); 
+	if ((document.selection)) {
+		document.message.msg.focus();
+		document.message.document.selection.createRange().text = document.message.document.selection.createRange().text + symbol;
+	} else if (document.getElementById(uid).selectionStart != undefined) {
+		var element = document.getElementById(uid);
+		var str = element.value;
+		var start = element.selectionStart;
+		var end = element.selectionEnd;
+		var length = element.selectionEnd - element.selectionStart;
+		element.value = str.substr(0, start) + str.substr(start, length) + symbol + str.substr(start + length);
+		element.selectionStart = end + symbol.length;
+		element.selectionEnd = end + symbol.length;
+		element.focus(); 
+	} else {
+		document.getElementById(uid).value += symbol;
+	}
+
+	document.getElementById(uid).focus();
+
+	return false; 
+}
+
 function colorpicker(uid, htmlTag) 
 {
 	var area = $('#ds_editor_modal'); 

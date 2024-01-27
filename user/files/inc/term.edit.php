@@ -2,7 +2,7 @@
 
 if ($term['parent'] == 0 && $term['path'] == 0) {
 	ds_die(__('У вас нет доступа')); 
-} elseif (!is_user_access('loads_file_delete') && get_user_id() != $term['user_id']) {
+} elseif (!is_user_access('user_files_edit') && get_user_id() != $term['user_id']) {
 	ds_die(__('У вас нет доступа')); 
 }
 
@@ -72,11 +72,13 @@ foreach($fields AS $field) {
 		</div>
 	</div>
 
+	<?php if (is_user_access('user_files_delete') || get_user_id() == $term['user_id']) : ?>
 	<div class="box-group">
 		<div class="box-group-links">
 			<a class="box-link" href="<?php echo get_files_term_link($term, 'delete'); ?>"><i class="fa fa-trash" aria-hidden="true"></i> <?php echo $strings['delete_term']; ?></a>
 		</div>
 	</div>
+	<?php endif; ?>
 </div>
 <?
 get_footer(); 
