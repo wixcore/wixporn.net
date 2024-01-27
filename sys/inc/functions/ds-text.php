@@ -22,10 +22,14 @@ function translit($in)
 	return str_replace($trans1,$trans2,$in);
 }
 
-//Фильтрация символов
+// Фильтрация символов
 function text($str)
 {
-	return stripcslashes(htmlspecialchars($str));
+    if ($str !== null) {
+        return stripcslashes(htmlspecialchars($str));
+    } else {
+        return null;
+    }
 }
 
 // Строка в hex 
