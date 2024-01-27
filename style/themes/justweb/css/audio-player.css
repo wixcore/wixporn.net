@@ -1,5 +1,5 @@
 /**
-* DCMS-Social v3
+* CMS-Social v3
 * Audio Player Styles
 */ 
 
@@ -126,6 +126,27 @@
     color: #666666;
     line-height: 30px;
     text-align: center;
+}
+
+.dpl-buttons {
+    display: inline-block;
+    margin-left: 15px;
+}
+
+.dpl-btn {
+    background-color: unset;
+    border: unset;
+    outline: unset;
+    color: #a7bbc3;
+    cursor: pointer;
+}
+
+.dpl[data-repeat="1"] .dpl-repeat {
+    color: #42a4dd;
+}
+
+.dpl[data-shuffle="1"] .dpl-shuffle {
+    color: #42a4dd;
 }
 
 @media screen and (max-width: 480px) {

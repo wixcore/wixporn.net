@@ -22,9 +22,23 @@
 			$ajaxpage.AjaxPageLoad(url, true); 
 		}, false);
 
-		$(document).on('click', 'a[href],[data-href]', function() {
+		$(document).on('click', 'a[href],[data-href]', function(e) {
+
+			if (e.ctrlKey === true) {
+				return true; 
+			}
+
 			var url = $(this).attr('href') || $(this).attr('data-href'); 
 			var target = $(this).attr('target') || false; 
+			var media = $(this).attr('data-media') || false; 
+
+			if (media == 'image' || media == 'video') {
+				var jwModal = $(this).jwModal(); 
+
+				if (jwModal === true) {
+					return false; 
+				}
+			}
 
 			if (target == '_blank') {
 				return true; 
@@ -171,6 +185,14 @@
 			});  
 
 			$('#ajax-style').remove(); 
+
+
+			$('[data-scroll="true"]').bind('scroll', function() {
+			    clearTimeout(is_scrolling); 
+			    is_scrolling = setTimeout(function() {
+			    	is_scrolling = false; 
+			    }, 300); 
+			}); 
 		}
 
 		return this; 

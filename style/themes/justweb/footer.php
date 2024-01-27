@@ -1,9 +1,12 @@
-<?php 
+        <?php 
 
-if (is_ajax()) { 
-    return ; 
-}
-?>
+        if (is_ajax()) { 
+            return ; 
+        }
+
+
+        $justweb = jw_theme_settings(); 
+        ?>
     	</div>
         <!--/ Body site Content -->
         
@@ -11,7 +14,7 @@ if (is_ajax()) {
     <!--/ Wrap Site Container -->
 
     <div class="container footer">
-        <div class="copyright">&copy; <a href="https://cms-social.ru">CMS-Social v3</a></div>
+        <div class="copyright">&copy; <?php echo $justweb['copyright']; ?></div>
     </div>
 
     <div id="ds_alerts"></div>

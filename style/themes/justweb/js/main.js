@@ -4,6 +4,7 @@ var ds_audio = new Audio();
 var ds_playlist = {}
 var ds_smiles = null; 
 var ds_loading = true; 
+var is_scrolling = false; 
 
 var eventAudio = new Audio(); 
 function playAudioMessage(name) {
@@ -53,11 +54,14 @@ function swiperEvent(type, callback)
 	});
 
 	window.addEventListener('touchend', function(e) {
+		if (is_scrolling !== false) 
+			return ;
+		
 		let end = e.changedTouches[0]; 
 		let diffX = Math.abs(start.pageX - end.pageX); 
 		let diffY = Math.abs(start.pageY - end.pageY); 
 
-		if (diffX >= 80 && diffY <= 40) {
+		if (diffX >= 120 && diffY <= 30) {
 			if (type == 'left' && start.pageX < end.pageX) {
 				callback(); 
 			} else if (type == 'right' && start.pageX > end.pageX) {
@@ -173,6 +177,11 @@ jQuery(function($) {
 		success: function(event) {
 			$.each(event, function(i, data) {
 				var commentsList = $(data.container);
+				var first_id = commentsList.data('first'); 
+
+				if (first_id == '-1') {
+					commentsList.find('.comments-empty').remove(); 
+				}
 
 				var countPrints = 0; 
 				if (data.prints) {
@@ -198,7 +207,7 @@ jQuery(function($) {
 			
 				var readers = $('.comments-readers[data-hash="' + data.hash + '"]'); 
 					readers.html(data.prints.length); 
-			
+
 				if (data.messages !== undefined) {
 					commentsList.attr('data-last', data.last_id); 
 
@@ -375,6 +384,19 @@ jQuery(function($) {
 		}
 	}); 
 
+
+	$(document).on('click', '.comment-reply', function() {
+		var comments = $(this).closest('.ds-comments'); 
+		var hash = comments.data('comments'); 
+		var textarea = $('.ds-editor-textarea[data-hash="' + hash + '"]'); 
+		var uid = $(this).data('id'); 
+		var nick = $(this).data('nick'); 
+
+		$('form[data-hash="' + hash + '"]').find('input[name="comments_reply"]').val(uid); 
+		textarea.val(nick + ', ' + textarea.val()); 
+		textarea.focus();
+	}); 
+
 	$(document).on('submit', '.comments-form', function() {
 		var attachments = $(this).find('.attachments [name="attachments[]"]').length; 
 		var msg = $(this).find('textarea[name="msg"]').val(); 
@@ -388,6 +410,7 @@ jQuery(function($) {
 
 		$(this).find('.attachments').html(''); 
 		$(this).find('textarea[name="msg"]').removeAttr('style').val(''); 
+		$(this).find('input[name="comments_reply"]').val(0); 
 
 		$.ajax({
 			type: "POST",
@@ -398,7 +421,13 @@ jQuery(function($) {
 				if (!data.errors) {
 					var commentsList = $(data.container);
 						commentsList.attr('data-last', data.id); 
-					
+						
+					var first_id = commentsList.data('first'); 
+
+					if (first_id == '-1') {
+						commentsList.find('.comments-empty').remove(); 
+					}
+
 					$('[data-comments-count="' + data.hash + '"]').text(data.count); 
 
 					if (data.append == 'last') {
@@ -425,13 +454,13 @@ jQuery(function($) {
 
 	$(document).on('click', '[data-toggle]', function(e) {
 		var uid = $(this).attr('data-toggle'); 
-		var current = $(this).closest('.ds-comment-form').attr('data-panel');
+		var current = $(this).closest('.ds-editor').attr('data-panel');
 
 		if (current == uid) {
 			uid = ''; 
 		}
 
-		$(this).closest('.ds-comment-form').attr('data-panel', uid);
+		$(this).closest('.ds-editor').attr('data-panel', uid);
 	});
 
 	$(document).on('click', '.mobile-sidebar-toggle', function(e) {
@@ -462,4 +491,52 @@ jQuery(function($) {
 			body.addClass('mobile-player-active'); 
 		} 
 	}); 
+
+	$(document).on('click', '.more-feed', function() {
+		var pages = Math.ceil($(this).attr('data-pages'));
+		var paged = Math.ceil($(this).attr('data-paged')) + 1;
+		var p_str = Math.ceil($(this).attr('data-p_str'));
+		var selector = $(this).attr('data-container');
+
+		if (pages < paged) {
+			return ;
+		}
+
+		$.ajax({
+			type: "POST",
+			url: '/ds-ajax/',
+			data: {
+				action: 'feeds', 
+				paged: paged, 
+				p_str: p_str, 
+			},
+			success: function(html) {
+				inProgress = false; 
+				$(document).find('.more-feed').attr('data-paged', paged);
+				$(document).find(selector).append(html);
+
+				if (pages == paged) {
+					$('.more-feed').hide(); 
+				}
+			}
+		});
+	});
+
+	$('[data-scroll]').scroll(function() {
+	    clearTimeout(is_scrolling); 
+	    is_scrolling = setTimeout(function() {
+	    	is_scrolling = false; 
+	    }, 300); 
+	});
+
+	var inProgress = false; 
+	$(document).on('scroll', function(e) {
+		$(document).find('[data-ajaxtype="scroll"]').each(function(indx, elem) {
+	    	if ($(window).scrollTop() + $(window).height() >= ($(document).height() - 300) && !inProgress) {
+	    		console.log('Loading..'); 
+	    		inProgress = true;  
+	    		$(elem).click();  
+	    	}
+		});
+	});
 }); 

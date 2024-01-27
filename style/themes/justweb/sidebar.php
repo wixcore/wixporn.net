@@ -4,6 +4,7 @@
 		<?php echo avatar(get_user_id()); ?><span class="nickname"><?php echo get_user_nick(); ?></span></a>
 <?php else: ?>
     <form class="sidebar_form" method="post" action="<?php echo get_site_url('/login.php'); ?>">
+        <?php do_event('jusweb_auth_before'); ?>
         <div class="input-text">
         <input type="text" name="nick" maxlength="32" placeholder="<?php echo __t('Логин', LANGUAGE_DOMAIN); ?>" /></div>
         <div class="input-text">
@@ -14,8 +15,10 @@
             <label><input type="checkbox" name="aut_save" checked="checked" value="1" /> <?php echo __t('Запомнить меня', LANGUAGE_DOMAIN); ?></label>
         </div>
         <div class="input-button text-center">
-            <a href="<?php echo get_site_url('/reg.php'); ?>"><?php echo __t('Регистрация', LANGUAGE_DOMAIN); ?></a>
+            <a href="<?php echo get_site_url('/reg.php'); ?>"><?php echo __t('Регистрация', LANGUAGE_DOMAIN); ?></a> | 
+            <a href="<?php echo get_site_url('/pass.php'); ?>"><?php echo __t('Забыли пароль?', LANGUAGE_DOMAIN); ?></a> 
         </div>
+        <?php do_event('jusweb_auth_after'); ?>
     </form>
 <?php endif; ?>
 </div>

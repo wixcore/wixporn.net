@@ -1,5 +1,76 @@
 <?php 
 
+function jw_theme_settings() {
+	$default = array(
+		'preset' => md5('default'), 
+		'logotype' => '<strong>CMS-Social</strong> <span>v3</span>', 
+		'copyright' => 'CMS-Social v3', 
+	); 
+
+	$options = get_option('jw_settings', array()); 
+
+	if ($options) {
+		$options = json_decode($options, true); 
+	}
+
+	return array_merge($default, $options); 
+}
+
+function jw_get_colors($str) {
+	preg_match_all('/#([A-z0-9]{3,6})/', $str, $matches); 
+
+	$colors = array(); 
+	if (!empty($matches[0])) {
+		$colors = array_unique($matches[0]); 
+	}
+
+	asort($colors); 
+
+	return $colors; 
+}
+
+function jw_theme_presets() 
+{
+	$path = get_theme_directory(); 
+	$list = ds_readdir_files_list($path); 
+
+	$headers = array(
+		'name' => 'Preset Name',
+		'primary' => 'Primary Color',
+	); 
+
+	$info = array(
+		md5('default') => array(
+			'name' => __t('Стандартный', LANGUAGE_DOMAIN), 
+			'colors' => jw_get_colors(file_get_contents(get_theme_directory() . '/style.css')), 
+			'primary' => '#43ade7', 
+		), 
+	); 
+
+	foreach($list AS $file) {
+		$ext = strtolower(substr($file, strrpos($file, '.') + 1)); 
+		$uri = str_replace(ROOTPATH, '', $file); 
+		$hash = md5($uri); 
+
+		if ($ext == 'css') {
+			$str = file_get_contents($file); 
+
+            foreach($headers AS $key => $value) {
+                if (preg_match('|' . $value . ' ?: ?(.*)$|mi', $str, $matches)) {
+                    $info[$hash][$key] = text($matches[1]);
+                }
+            }
+
+            if (isset($info[$hash]['name'])) {
+            	$info[$hash]['url'] = get_site_url($uri); 
+            	$info[$hash]['colors'] = jw_get_colors($str); 
+            }
+		}
+	}
+
+	return $info; 
+}
+
 //add_event('ds_personal_files_init', 'justweb_register_templates'); 
 function justweb_register_templates() 
 {

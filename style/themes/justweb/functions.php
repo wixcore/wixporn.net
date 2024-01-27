@@ -1,23 +1,74 @@
 <?php 
 
-define('THEME_VERSION', '1.0.3'); 
+define('THEME_VERSION', '1.0.4'); 
 define('LANGUAGE_DOMAIN', 'justweb'); 
 
+require dirname(__FILE__) . '/includes/template-admin.php'; 
+require dirname(__FILE__) . '/includes/template-user.php'; 
 require dirname(__FILE__) . '/includes/template-functions.php'; 
+require dirname(__FILE__) . '/includes/jw-modal-ajax.php'; 
 
-add_event('init_head_theme', 'justweb_styles_init'); 
+
+if (!defined('SUPPORT_WIDGETS') || SUPPORT_WIDGETS == true) {
+	require dirname(__FILE__) . '/widgets/JW_Widget_Online.php'; 
+
+	add_event('ds_register_widgets', function() {
+		register_widget('JW_Widget_Online'); 
+	}); 
+}
+
+add_event('ds_admin_init', 'justweb_admin_settings'); 
+function justweb_admin_settings() {
+    add_settings_page('justweb', __t('Настроить тему', LANGUAGE_DOMAIN), 'adm_set_sys', 'justweb_admin_page_settings', __t('Настроить тему', LANGUAGE_DOMAIN), false); 
+    add_submenu_admin(__t('Настроить тему', LANGUAGE_DOMAIN), 'settings.php?page=justweb', 'adm_set_sys', 'fa-cog', 10, 'themes.php', __t('Настроить тему', LANGUAGE_DOMAIN));
+}
+
+function justweb_admin_page_settings() {
+	require dirname(__FILE__) . '/templates/admin-settings.php'; 
+}
+
+function jw_user_preset() {
+	$presets = get_option('jw_presets', NULL); 
+
+	if ($presets !== NULL) {
+		$presets = json_decode($presets, true); 
+	} else {
+		$presets = jw_theme_presets(); 
+	}
+
+	$justweb = jw_theme_settings(); 
+	$preset_id = $justweb['preset']; 
+
+	if (is_user()) {
+		$options = get_user_options(get_user_id(), 'justweb'); 
+		$opt = array_replace($justweb, $options); 
+		$preset_id = $opt['preset']; 
+	}
+
+	return isset($presets[$preset_id]) ? $presets[$preset_id] : array(); 
+}
+
+add_event('ds_theme_styles_init', 'justweb_styles_init'); 
 function justweb_styles_init() 
 {
-	ds_theme_style_add('https://fonts.googleapis.com/css?family=Roboto', 'justweb-fonts', '', 'all'); 
+	ds_theme_style_add(get_theme_uri() . '/css/fonts.css', 'justweb-fonts', THEME_VERSION, 'all'); 
 	ds_theme_style_add(get_theme_uri() . '/css/icons.css', 'justweb-icons', THEME_VERSION, 'all'); 
 	ds_theme_style_add(get_theme_uri() . '/icons/flaticon.css', 'justweb-flaticon', THEME_VERSION, 'all'); 
 	ds_theme_style_add(get_theme_uri() . '/css/audio-player.css', 'justweb-audio-player', THEME_VERSION, 'all'); 
+	ds_theme_style_add(get_theme_uri() . '/css/jw-modal.css', 'justweb-modal', THEME_VERSION, 'all'); 
 	ds_theme_style_add(get_theme_uri() . '/css/nprogress.css', 'justweb-nprogress', THEME_VERSION, 'all'); 
+
+	$preset = jw_user_preset(); 
+
+	if (isset($preset['url'])) {
+		ds_theme_style_add($preset['url'], 'justweb-preset', THEME_VERSION, 'all'); 
+	}
 }
 
 add_event('ds_theme_scripts_init', 'justweb_add_scripts'); 
 function justweb_add_scripts() { 
 	ds_theme_script_add(get_theme_uri() . '/js/nprogress.min.js', 'justweb-nprogress', THEME_VERSION);
+	ds_theme_script_add(get_theme_uri() . '/js/jw-modal.js', 'justweb-modal', THEME_VERSION);
 	ds_theme_script_add(get_theme_uri() . '/js/jquery.ajaxpage.js', 'justweb-ajaxpage', THEME_VERSION);
 	ds_theme_script_add(get_theme_uri() . '/js/main.js', 'justweb-main', THEME_VERSION);
 }
@@ -51,6 +102,9 @@ function justweb_counters()
 	if (!isset($counters['users_online'])) {
 		$counters['users_online'] = array(
 			'count' => db::count("SELECT COUNT(id) FROM `user` WHERE `date_last` > " . ( time() - 180 ) . ""),
+		); 
+		$counters['users_all'] = array(
+			'count' => db::count("SELECT COUNT(id) FROM `user`"),
 		); 
 		ds_set('justweb_counters', $counters); 
 	}
@@ -286,7 +340,7 @@ add_filter('ds_events_comments_ajax', function($data, $us) {
 			'object_id' => $attr[1],  
 			'last' => $elem['last_id'],   
 		)); 
-		
+
 		$array[$key]['hash'] = $elem['hash']; 
 
 		if ($comments->is_posts()) {
@@ -298,11 +352,10 @@ add_filter('ds_events_comments_ajax', function($data, $us) {
 
 		        $args = array(
 		        	'classes' => join(' ', $classes), 
-		        	'image' => get_avatar($post['user_id']), 
-		        	'title' => '<a href="' . get_user_url($post['user_id']) . '">' . get_user_nick($post['user_id']) . '</a>', 
-		        	'time' => vremja($post['time']), 
+		        	'image'   => get_avatar($post['user_id']), 
+		        	'title'   => '<a href="' . get_user_url($post['user_id']) . '">' . get_user_nick($post['user_id']) . '</a>', 
+		        	'time'    => vremja($post['time']), 
 		        	'content' => output_text($post['msg']), 
-		        	'reply' => '?reply_to=' . $post['user_id'] . '&comment_id=' . $post['id'], 
 		        	'actions' => array(), 
 		        ); 	
 
@@ -356,9 +409,7 @@ add_filter('ds_events_comments_ajax', function($data, $us) {
 			if (!isset($prints[$e['hash']])) 
 				continue; 
 			
-			$array[$k] = array(
-				'prints' => $prints[$e['hash']], 
-			); 
+			$array[$k]['prints'] = $prints[$e['hash']]; 
 		}	
 		
 	}
@@ -454,7 +505,7 @@ function justweb_comment_posted_json($post_id, $object_type, $object_id)
 		'time' => vremja($post['time']), 
 		'content' => output_text($post['msg']), 
 	); 
-	
+
 	$json = array(
 		'id' => $post_id, 
 		'append' => 'first', 
@@ -479,6 +530,33 @@ function justweb_error_json() {
 
 function justweb_output_json($json) {
 	die(json_encode($json)); 
+}
+
+
+// Подгрузка ленты
+add_filter('ajax_feeds_callback', function() {
+	$paged = (isset($_POST['paged']) ? (int) $_POST['paged'] : 1); 
+	$p_str = (isset($_POST['p_str']) ? (int) $_POST['p_str'] : 1); 
+
+	$args = array(
+		'user_id' => get_user_id(), 
+		'p_str' => ($p_str ? $p_str : 5), 
+		'paged' => $paged,
+	); 
+
+	$query = new DB_Feeds($args); 
+	foreach($query->items AS $feed) {
+		ds_output_feed($feed); 
+	}
+
+	die();  
+}); 
+
+
+add_filter('ds_comment_link_reply', 'justweb_comment_link_reply', 10, 2); 
+function justweb_comment_link_reply($action, $post) {
+	$ank = get_user($post['user_id']); 
+	return '<span class="comment-reply" data-id="' . $post['id'] . '" data-nick="' . text($ank['nick']) . '">' . __t('Ответить', LANGUAGE_DOMAIN) . '</span>'; 
 }
 
 add_filter('ds_contact_msg', 'justweb_contact_msg', 10, 3); 
@@ -506,7 +584,6 @@ function justweb_messages_contact($ank) {
 add_event('ds_messages_helper_before', 'justweb_messages_helper_before'); 
 function justweb_messages_helper_before($ank) {
 	echo '<div class="mail_Pagination-helper"></div>'; 
-	echo ''; 
 }
 
 add_event('ds_messages_helper_after', 'justweb_messages_helper_after'); 
@@ -519,7 +596,7 @@ add_filter('filter_message_form_args', function($args) {
 	return $args; 
 }); 
 
-add_event('ds_comment_textarea_after', 'justweb_bbpanel_toggle', 10, 2); 
-function justweb_bbpanel_toggle($hash, $args) {
-	echo '<div class="textarea-panel"><span class="bb-panel-toggle" data-toggle="bbpanel"><i class="fa fa-font"></i></span> <span data-toggle="smiles" class="smile-panel-toggle"><i class="fa fa-smile-o"></i></span></div>'; 
+add_event('ds_editor_textarea_after', 'justweb_bbpanel_toggle', 10, 1); 
+function justweb_bbpanel_toggle($before) {
+	return '<div class="textarea-panel"><span class="bb-panel-toggle" data-toggle="bbpanel"><i class="fa fa-font"></i></span> <span data-toggle="smiles" class="smile-panel-toggle"><i class="fa fa-smile-o"></i></span></div>' . $before; 
 }

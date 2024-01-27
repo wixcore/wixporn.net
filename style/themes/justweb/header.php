@@ -15,6 +15,8 @@ if (is_ajax()) {
 }
 
 $counters = justweb_counters();
+$preset = jw_user_preset(); 
+$justweb = jw_theme_settings(); 
 
 echo '<?xml version="1.0" encoding="utf-8"?>'; 
 ?><!DOCTYPE html>
@@ -27,6 +29,8 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
       <?php ds_head(); ?>  
     <link rel="shortcut icon" href="<?php echo get_theme_uri(); ?>/images/favicon.ico" />
     <script>var theme_uri = '<?php echo get_theme_uri(); ?>';</script>
+
+    <meta name="theme-color" content="<?php echo (isset($preset['primary']) ? $preset['primary'] : '#36585e'); ?>">
 </head>
 <body <?php body_class(); ?>>
 	<!-- Header panel -->
@@ -35,11 +39,11 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
             <input type="checkbox" id="header-player-toggle" />
             
             <div class="header-logo">
-                <a href="/"><?php echo '<strong>CMS-Social</strong> <span>v3</span>'; ?></a>
+                <a href="/"><?php echo $justweb['logotype']; ?></a>
             </div>
 
             <div class="header-search">
-                <form>
+                <form action="/search/">
                 	<input type="search" name="q" placeholder="<?php echo __t('Поиск по сайту', LANGUAGE_DOMAIN); ?>" />
                 </form>
                 
@@ -64,9 +68,12 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
 
             <div class="header-nav">
             <?php if (is_user()) : ?>
-                <a href="#"><i class="flaticon-074-wifi"></i></a>
-                <a href="<?php echo get_site_url('#'); ?>"><i class="flaticon-160-chat"></i></a>
-                <a href="<?php echo get_site_url('#'); ?>"><i class="flaticon-161-bell"></i></a>
+                <a href="<?php echo get_site_url('/feed/'); ?>"><i class="flaticon-074-wifi"></i></a>
+                <a href="#"><i class="flaticon-160-chat"></i></a>
+                <a href="<?php echo get_site_url('/user/notify/'); ?>">
+                    <i class="flaticon-161-bell"></i>
+                    <span class="counter" data-type="notify" data-count="<?php echo $counters['notify']['count']; ?>"><?php echo $counters['notify']['count']; ?></span>
+                </a>
                 <a href="<?php echo get_user_url(); ?>"><i class="flaticon-097-user"></i></a>
             <?php endif; ?>
             </div>
@@ -84,6 +91,10 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
                         </div>
                     </div>
                     <div class="dpl-volume"><div class="dpl-volume-bar"></div></div>
+                    <div class="dpl-buttons">
+                        <button class="dpl-btn dpl-repeat"><i class="fa fa-retweet" aria-hidden="true"></i></button>
+                        <button class="dpl-btn dpl-shuffle"><i class="fa fa-random" aria-hidden="true"></i></button>
+                    </div>
                 </div>
                 <div class="music_playlist">
                     <?php echo __t('Вы еще не загрузили ни одной песни', LANGUAGE_DOMAIN); ?>
