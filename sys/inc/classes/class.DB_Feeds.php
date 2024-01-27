@@ -89,15 +89,28 @@ class DB_Feeds
 		$this->request = $SQLSelect; 
 		$items = db::select($SQLSelect); 
 
-		$likes = array(); 
-		if ($user_id = get_user_id()) {
-			$ids = array(); 
-			foreach($items AS $key => $item) {
-				$ids[] = $item['id']; 
-			}
+		$likes = array();
 
-			$likes = db::get_var("SELECT `object_id` FROM `feeds_likes` WHERE `user_id` = '" . $user_id . "' AND `object_id` IN(" . join(',', $ids) . ")", true); 
+		if ($user_id = get_user_id()) {
+			$ids = array();
+		
+			foreach ($items as $key => $item) {
+				$ids[] = $item['id'];
+			}
+		
+			if (!empty($ids)) {
+				$placeholders = implode(',', array_fill(0, count($ids), '?'));
+		
+				$query = "SELECT `object_id` FROM `feeds_likes` WHERE `user_id` = ? AND `object_id` IN ($placeholders)";
+			
+				// Создаем массив значений для подстановки
+				$values = array_merge([$user_id], $ids);
+		
+				$likes = db::get_var($query, true, $values);
+			}
 		}
+		
+		
 
 		foreach($items AS $key => $value) {
 			$items[$key]['is_liked'] = (in_array($value['id'], $likes) ? 1 : 0); 

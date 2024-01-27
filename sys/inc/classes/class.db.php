@@ -89,21 +89,20 @@ class db
         return null;
     }
  
-    /**
-     * Возвращает значение одного поля
-     *
-     * @param $query  $query
-     * @return string | array
-     */
+    # Возвращает значение одного поля
     public static function get_var($query, $rows = false)
     {
         $output = ($rows ? [] : null); 
-        
         self::$request = $query; 
+
         $mysqli_result = self::instance()->query($query);
+        // Дополнительные проверки на ошибки
+        if ($mysqli_result === false) {
+            die("Error in query: " . self::instance()->error);
+        }
 
         if ($mysqli_result) {
-            while($post = $mysqli_result->fetch_array()) {
+            while ($post = $mysqli_result->fetch_array(MYSQLI_ASSOC)) {
                 if ($rows === true) {
                     $output[] = array_shift($post); 
                 } else {
@@ -111,9 +110,9 @@ class db
                 }
             }
         }
-
         return $output; 
     }
+    
  
     /**
      * @param string $query

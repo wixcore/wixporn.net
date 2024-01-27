@@ -288,8 +288,8 @@ elseif (isset($_SERVER["HTTP_USER_AGENT"]) && (preg_match('#windows#i', $_SERVER
 else 
     $webbrowser = false;
 
+$ipa;
 
-$ipa = false;
 if(isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR']!='127.0.0.1' && preg_match("#^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$#",$_SERVER['HTTP_X_FORWARDED_FOR']))
 {
 	$ip2['xff'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
@@ -314,7 +314,7 @@ if (isset($_SERVER['HTTP_USER_AGENT']))
 	$ua = $_SERVER['HTTP_USER_AGENT'];
 	$ua = strtok($ua, '/');
 	$ua = strtok($ua, '('); // оставляем только то, что до скобки
-	$ua = preg_replace('#[^a-z_\./ 0-9\-]#iu', null, $ua); // вырезаем все "левые" символы
+	$ua = preg_replace('#[^a-z_\./ 0-9\-]#iu', '', $ua); // вырезаем все "левые" символы
 
 	// Опера мини тоже посылает данные о телефоне :)
 	if (isset($_SERVER['HTTP_X_OPERAMINI_PHONE_UA']) && preg_match('#Opera#i',$ua))

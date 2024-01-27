@@ -46,7 +46,6 @@ $accesses = get_user_accesses();
 
 if ($action == 'edit') {
     $access_list = db::get_var("SELECT id_access FROM `user_group_access` WHERE `id_group` = '" . $group_id . "'", true); 
-
     $accessFields = []; 
     foreach($accesses AS $key => $value) {
         $accessFields[] = array(
