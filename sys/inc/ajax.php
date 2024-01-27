@@ -90,13 +90,8 @@ if (is_user_access('plugins')) {
 		$page = (isset($_GET['page']) ? urlencode($_GET['page']) : 1); 
 		$sort = (isset($_GET['sort']) ? urlencode($_GET['sort']) : 'popular'); 
 
-		$list = get_http_content('https://wixcms.net/api/v1/plugins/list', array(
-			's' => $search, 
-			'sort' => $sort, 
-			'page' => $page, 
-		)); 
-
-		$array = json_decode($list, 1); 
+		$list = get_http_content('https://wixcms.net/api/v1/plugins/list', array('s' => $search, 'sort' => $sort, 'page' => $page)); 
+		$array 	= json_decode($list, 1); 
 
 		foreach($array['list'] AS $plugin) {
 			echo '<div class="cards-item">'; 

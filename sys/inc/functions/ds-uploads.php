@@ -461,21 +461,28 @@ function array_files_multiple(&$files)
 
 function get_file_thumbnails($file) 
 {
-	if (is_numeric($file)) {
-		$file = get_file($file); 
-	}
+    if (is_numeric($file)) {
+        $file = get_file($file); 
+    }
 
-	$is_default = use_filters('default_file_thumbnails', true); 
+    $is_default = use_filters('default_file_thumbnails', true); 
 
-	if ($is_default) {
-		$thumbnails = get_files_meta($file['id'], '_thumbnails'); 
-		$thumbnails = unserialize($thumbnails);	
-	}
+    if ($is_default) {
+        $thumbnails = get_files_meta($file['id'], '_thumbnails'); 
 
-	if (!empty($thumbnails)) {
-		return use_filters('ds_get_file_thumbnails', $thumbnails); 
-	}
+        // Проверяем, что $thumbnails не является null перед unserialize
+        if ($thumbnails !== null) {
+            $thumbnails = unserialize($thumbnails);
+        } else {
+            $thumbnails = array(); // или другая логика по умолчанию
+        }
+    }
+
+    if (!empty($thumbnails)) {
+        return use_filters('ds_get_file_thumbnails', $thumbnails); 
+    }
 }
+
 
 function get_file_thumbnail($file, $size = 'thumbnail') 
 {

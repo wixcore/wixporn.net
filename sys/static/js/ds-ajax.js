@@ -8,8 +8,8 @@
 * настройкой callback параметров в момент опроса
 * И при получении данных от сервера выполнять пользовательскую callback функцию
 * 
-* Author:       alex-borisi
-* E-Mail:       alex-borisi@ya.ru
+* Author:       ua.lifesheets
+* E-Mail:       ua.lifesheets@ya.ru
 * Author URL:   https://andryushkin.ru
 */ 
 
