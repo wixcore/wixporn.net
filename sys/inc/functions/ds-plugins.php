@@ -172,7 +172,7 @@ function plugin_exists($plug)
 }
 
 /**
-* Устанавливает плагин из репозитория CMS-Social
+* Устанавливает плагин из репозитория WIXCMS
 * @return bolean 
 */ 
 function ds_plugin_install($plug) 
@@ -181,7 +181,7 @@ function ds_plugin_install($plug)
         add_error(__('Плагин уже существует')); 
     }
 
-    $plugin = json_decode(get_http_content('https://cms-social.ru/api/v1/plugins/info', array(
+    $plugin = json_decode(get_http_content('https://wixcms.net/api/v1/plugins/info', array(
         'slug' => $plug, 
     )), true); 
 

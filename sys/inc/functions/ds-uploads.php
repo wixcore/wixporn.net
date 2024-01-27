@@ -47,7 +47,7 @@ function clear_object_attachments($file)
 				        if (empty($array['content'])) {
 				        	db::query("DELETE FROM `" . $post['param2'] . "` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
 				        } else {
-					        $content = '<!-- CMS-Social Data {{' . serialize($array['data']) . '}} -->' . "\r";
+					        $content = '<!-- WIXCMS Data {{' . serialize($array['data']) . '}} -->' . "\r";
 					        $content .= $array['content']; 
 				        	db::query("UPDATE `" . $post['param2'] . "` SET `msg` = '" . $content . "' WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
 				        }
@@ -69,7 +69,7 @@ function clear_object_attachments($file)
 				        if (empty($array['content'])) {
 				        	db::query("DELETE FROM `mail` WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
 				        } else {
-					        $content = '<!-- CMS-Social Data {{' . serialize($array['data']) . '}} -->' . "\r";
+					        $content = '<!-- WIXCMS Data {{' . serialize($array['data']) . '}} -->' . "\r";
 					        $content .= $array['content']; 
 				        	db::query("UPDATE `mail` SET `msg` = '" . $content . "' WHERE `id` = '" . $post['object_id'] . "' LIMIT 1"); 
 				        }

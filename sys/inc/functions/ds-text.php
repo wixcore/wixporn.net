@@ -397,10 +397,10 @@ function get_text_array($str)
 {
     $data = array(); 
 
-    preg_match('/<!-- CMS-Social Data {{(.*)}} -->/m', $str, $matches); 
+    preg_match('/<!-- WIXCMS Data {{(.*)}} -->/m', $str, $matches); 
     if (!empty($matches[1])) {
         $data = unserialize($matches[1]); 
-        $str = trim(preg_replace('/<!-- CMS-Social Data {{(.*)}} -->/m', '', $str)); 
+        $str = trim(preg_replace('/<!-- WIXCMS Data {{(.*)}} -->/m', '', $str)); 
     }
     
     return array(

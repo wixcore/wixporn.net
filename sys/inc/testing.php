@@ -1,5 +1,5 @@
 <?
-echo "Версия CMS-Social v.".get_version()."<br />\n";
+echo "Версия WIXCMS v.".get_version()."<br />\n";
 
 list ($php_ver1,$php_ver2,$php_ver3)=explode('.', strtok(strtok(phpversion(),'-'),' '), 3);
 

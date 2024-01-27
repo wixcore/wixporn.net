@@ -222,7 +222,7 @@ function p404()
 /**
 * Функция перенаправляет пользователя 
 */ 
-function ds_redirect($url, $status = 302, $redirect_by = 'DCMS-Social') 
+function ds_redirect($url, $status = 302, $redirect_by = 'WIXCMS') 
 {
     $url = use_filters( 'ds_redirect', $url, $status );
     $status = use_filters( 'ds_redirect_status', $status, $url );
@@ -250,7 +250,7 @@ function ds_default_ajax()
     $action = 'plugins_search_api'; 
     add_event('ajax_' . $action . '_callback', function() {
 
-        $list = get_http_content('https://cms-social.ru/api/v1/plugins/list', array(
+        $list = get_http_content('https://wixcms.net/api/v1/plugins/list', array(
             's' => 'Тест', 
             'page' => '2', 
         )); 

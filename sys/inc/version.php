@@ -1,20 +1,20 @@
 <?php 
 
 /**
-* CMS-Social Build Version
+* WIXCMS Build Version
 * Информация об установленной версии CMS Social
 *
 * @since 3.0.0
 */
 
 /**
-* Версия системы CMS-Social
+* Версия системы WIXCMS
 * @global string $cs_core_version
 */ 
-$cs_core_version = '3.1.1';  
+$cs_core_version = '1.0.0 Alpha';  
 
 /**
 * Рекомендуемая версия PHP 
 * @global string $cs_recomended_php
 */
-$cs_recomended_php = '7.0'; 
+$cs_recomended_php = '8.0'; 

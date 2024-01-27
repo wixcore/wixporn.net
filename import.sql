@@ -677,7 +677,7 @@ CREATE TABLE IF NOT EXISTS `options` (
 -- Dumping data for table web_wixpornn.options: 6 rows
 /*!40000 ALTER TABLE `options` DISABLE KEYS */;
 INSERT INTO `options` (`id`, `name`, `value`, `type`) VALUES
-	(1, 'ds_themes', '{"justweb":{"name":"Just Web\\r","description":"Адаптивный шаблон WEB \\/ Tablet \\/ Mobile, с поддержкой Ajax технологий CMS-Social v3, создано специально для релизов системы.\\r","author":"alex-borisi\\r","authoruri":"https:\\/\\/andryushkin.ru\\r","version":"1.0.4\\r","status":"beta\\r","slug":"justweb","active":"0"}}', 'themes'),
+	(1, 'ds_themes', '{"justweb":{"name":"Just Web\\r","description":"Адаптивный шаблон WEB \\/ Tablet \\/ Mobile, с поддержкой Ajax технологий WIXCMS v1.0.0 Alpha, создано специально для релизов системы.\\r","author":"alex-borisi\\r","authoruri":"https:\\/\\/andryushkin.ru\\r","version":"1.0.4\\r","status":"beta\\r","slug":"justweb","active":"0"}}', 'themes'),
 	(2, '_widgets-home', '[]', 'widgets'),
 	(3, '_widget_home-1706330036', '{"widget_name":"JW_Widget_Online","widget_area":"home","instance":{"widget_area":"home"}}', 'widget'),
 	(4, '_widget_home-1706330029', '{"widget_name":"Widget_Html","widget_area":"home","instance":{"html":"INDEX","widget_area":"home"}}', 'widget'),

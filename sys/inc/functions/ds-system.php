@@ -79,7 +79,7 @@ function ds_die($msg = '')
     die('
     <html>
         <head>
-            <title>' . __('Ошибка %s', 'CMS-Social') . '</title>
+            <title>' . __('Ошибка %s', 'WIXCMS') . '</title>
             <style>
             body {
                 background-color: white;
@@ -513,7 +513,7 @@ function ds_mail($to, $subject, $message, $headers = '', $attachments = array())
     $phpmailer->clearReplyTos();
 
     if ( ! isset( $from_name ) ) {
-        $from_name = 'CMS-Social';
+        $from_name = 'WIXCMS';
     }
 
     if ( ! isset( $from_email ) ) {
@@ -522,7 +522,7 @@ function ds_mail($to, $subject, $message, $headers = '', $attachments = array())
             $sitename = substr( $sitename, 4 );
         }
 
-        $from_email = 'cms-social@' . $sitename;
+        $from_email = 'wixcms@' . $sitename;
     }
 
     $from_email = use_filters( 'ds_mail_from', $from_email );

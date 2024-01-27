@@ -48,7 +48,7 @@ function ds_comments_init()
 		if (!is_errors()) {
 			$attachments = (isset($_POST['attachments']) ? $_POST['attachments'] : array()); 
 
-	        $content = '<!-- CMS-Social Data {{' . serialize(use_filters('ds_mail_serialize_data', array(
+	        $content = '<!-- WIXCMS Data {{' . serialize(use_filters('ds_mail_serialize_data', array(
 	            'user_id' => $user['id'], 
 	            'attachments' => $attachments, 
 	        ))) . '}} -->' . "\r";

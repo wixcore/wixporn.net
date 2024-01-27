@@ -629,7 +629,7 @@ function check_plugins_update()
 }
 
 /** 
-* Проверяем наличие обновлений ядра CMS-Social
+* Проверяем наличие обновлений ядра WIXCMS
 */ 
 function check_core_update() 
 {

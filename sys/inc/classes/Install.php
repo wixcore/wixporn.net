@@ -392,13 +392,13 @@ class Install
 			<meta charset="UTF-8">
 			<meta http-equiv="X-UA-Compatible" content="IE=edge">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
-			<title>' . __('Установка CMS-Social') . '</title>
+			<title>' . __('Установка WIXCMS') . '</title>
 			<link rel="stylesheet" href="' . get_site_url('/sys/static/css/install.css') . '" type="text/css" />
 			<link rel="shortcut icon" href="' . get_site_url('/sys/static/images/favicon.ico') . '" />
 			<script id="jquery" type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
 			</head><body><div class="document">'; 
 
-		echo '<div class="logo"><a href="https://cms-social.ru" target="_blank"><img src="' . get_site_url('/sys/static/images/logo.png') . '" alt="Logo" /></a></div>';
+		echo '<div class="logo"><a href="https://wixcms.net" target="_blank"><img src="' . get_site_url('/sys/static/images/logo.png') . '" alt="Logo" /></a></div>';
 	}
 
 	public function get_footer() 

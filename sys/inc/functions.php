@@ -103,7 +103,7 @@ function include_deprecated($file, $version)
 	global $messages_deprecated; 
 
 	$messages_deprecated[] = 'Файл <span style="color: blue;">' . str_replace(H, '', $file) . 
-	' считается устаревшим c <a href="https://cms-social.ru/version/' . $version . '/">версии ' . $version . '</a>';
+	' считается устаревшим c <a href="https://wixcms.net/version/' . $version . '/">версии ' . $version . '</a>';
 }
 
 /**
@@ -116,7 +116,7 @@ function add_includes_cache($includes, $dir_files = '', $cache_name)
 
     if (!is_file($path_tmp_includes)) {
         $cache = "<?php";
-        $cache .= "\n\n/**\n* Created this file by CMS-Social \n* Caching all php functions in one file \n* If you change the function files or add new ones, delete the file\n* Direcory PHP files this cache: ./".$dir_files."\n* Support tehnical WEB site: https://cms-social.ru\n*/\n";
+        $cache .= "\n\n/**\n* Created this file by WIXCMS \n* Caching all php functions in one file \n* If you change the function files or add new ones, delete the file\n* Direcory PHP files this cache: ./".$dir_files."\n* Support tehnical WEB site: https://wixcms.net\n*/\n";
 
         foreach($includes AS $include) 
         {

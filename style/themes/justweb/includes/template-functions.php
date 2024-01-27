@@ -3,8 +3,8 @@
 function jw_theme_settings() {
 	$default = array(
 		'preset' => md5('default'), 
-		'logotype' => '<strong>CMS-Social</strong> <span>v3</span>', 
-		'copyright' => 'CMS-Social v3', 
+		'logotype' => '<strong>WIXCMS</strong> <span>v1.0.0 Alpha</span>', 
+		'copyright' => 'WIXCMS v1.0.0 Alpha', 
 	); 
 
 	$options = get_option('jw_settings', array()); 

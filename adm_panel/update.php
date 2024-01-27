@@ -119,14 +119,14 @@ get_header_admin();
 $updateList = get_list_updates(); 
 
 if ($update_info['latest']['version'] <= get_version()) {
-	echo __('У вас последняя версия CMS-Social %s', '<a target="_blank" href="' . $update_info['latest']['url'] . '">' . $update_info['latest']['version'] . '</a>'); 
+	echo __('У вас последняя версия WIXCMS %s', '<a target="_blank" href="' . $update_info['latest']['url'] . '">' . $update_info['latest']['version'] . '</a>'); 
 } else {
 	?>
 	<h4><?php echo __('Система'); ?></h4>
 
 	<div class="list">
 		<div class="list-item">
-		    <div class="list-item-title"><?php echo __('Доступна новая версия CMS-Social %s', $update_info['latest']['version']); ?></div>
+		    <div class="list-item-title"><?php echo __('Доступна новая версия WIXCMS %s', $update_info['latest']['version']); ?></div>
 		    <div class="list-item-description"><?php echo __('У вас установлена версия %s, вам доступно обновление до версии %s', get_version(), $update_info['latest']['version']); ?></div>
 		    <div class="list-item-action">
 		        <a class="button" href="<?php echo get_confirm_url(get_query_url(array('do' => 'core')), 'confirm', 'update'); ?>"><?php echo __('Обновить'); ?></a>

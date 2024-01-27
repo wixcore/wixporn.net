@@ -28,7 +28,7 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
 	<div class="header">
         <nav class="header-menu">
             <a class="link link-home" href="<?php echo get_site_url('/adm_panel/'); ?>">
-                <span class="icon-ds">CS</span> CMS-Social <sup>v3</sup>
+                <span class="icon-ds">CS</span> WIXCMS <sup>v3</sup>
             </a>
             <a class="link link-toggle-menu" href="javascript:void(0)">
                 <i class="fa fa-bars" aria-hidden="true"></i>

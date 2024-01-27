@@ -9,7 +9,7 @@ class Update
 {
     private $config;
     private $current = array();
-    private $url_api = 'https://cms-social.ru/api/v1'; 
+    private $url_api = 'https://wixcms.net/api/v1'; 
     
     /**
     * Получение информации о последней версии движка

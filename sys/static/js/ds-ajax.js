@@ -1,7 +1,7 @@
 
 /**
-* Разработано для CMS-Social v3
-* Project URL:  https://cms-social.ru
+* Разработано для WIXCMS v1.0.0 Alpha
+* Project URL:  https://wixcms.net
 *
 * Система интервального опроса сервера
 * Позволяет регистрировать различные типы уведомлений с гибкой 
