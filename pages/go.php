@@ -1,0 +1,1 @@
+<?phpif (!isset($_GET['go']) && !preg_match('#^https?://#', @base64_decode($_GET['go']))) {    ds_redirect("/");    exit;}if (preg_match('#^(ht|f)tps?://#', base64_decode($_GET['go']))) {    ds_redirect(base64_decode($_GET['go']));    exit;} 

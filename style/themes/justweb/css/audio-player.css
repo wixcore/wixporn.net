@@ -1,0 +1,139 @@
+/**
+* DCMS-Social v3
+* Audio Player Styles
+*/ 
+
+.dpl * {
+    box-sizing: border-box;
+}
+
+.dpl {
+    display: block; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    width: 100%; 
+    position: relative;
+    box-sizing: border-box;
+} 
+ 
+.dpl > div { 
+	vertical-align: middle; 
+} 
+ 
+.dpl-toggle { 
+	border: 1px solid #42a4dd; 
+    color: #42a4dd; 
+    border-radius: 3px; 
+    height: 30px; 
+    width: 30px; 
+    display: inline-block; 
+    font: normal normal normal 14px/1 FontAwesome; 
+    font-size: 14px; 
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 28px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.dpl-toggle::before {
+	content: "\f04b";
+}
+
+.ds-playing .dpl-toggle::before {
+	content: "\f04c";
+}
+
+
+.dpl-title {
+    position: absolute;
+    font-size: 12px;
+    top: 3px;
+    left: 37px;
+    width: calc(100% - 200px);
+    height: 13px;
+    line-height: 13px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    text-align: left;
+    color: gray; 
+}
+.dpl-title + .dpl-progress {
+    margin-top: 15px;
+}
+
+.dpl-volume, 
+.dpl-progress {
+	border-radius: 5px;
+	height: 10px; 
+	box-shadow: 0px 1px 4px inset #c5c5c5;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.dpl-volume {
+    width: 100px;
+}
+
+.dpl-progress {
+    width: calc(100% - 200px); 
+}
+
+.dpl-volume-bar, 
+.dpl-progress-loaded,
+.dpl-progress-bar {
+    background-color: #42a4dd;
+    height: 10px;
+    width: 0%;
+    position: absolute;
+    top: 0px; 
+    left: 0px; 
+}
+
+.dpl-volume-bar {
+    width: 100%; 
+}
+
+.dpl-progress-loaded {
+    background-color: #e9f3ff;
+    box-shadow: 0px 1px 4px inset #d3e3f7;
+}
+
+@keyframes player_progress_animation {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 0;
+  }
+}
+
+.player-preload .dpl-progress {
+  background-image: -webkit-linear-gradient(-45deg,rgba(255,255,255,.15) 25%,#e9f3ff 25%,#e9f3ff 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,#e9f3ff 75%,#e9f3ff);
+  background-image: -o-linear-gradient(-45deg,rgba(255,255,255,.15) 25%,#e9f3ff 25%,#e9f3ff 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,#e9f3ff 75%,#e9f3ff);
+  background-image: linear-gradient(-45deg,rgba(255,255,255,.15) 25%,#e9f3ff 25%,#e9f3ff 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,#e9f3ff 75%,#e9f3ff);
+  -webkit-background-size: 20px 20px;
+  animation: player_progress_animation 1s linear infinite;
+}
+
+.dpl-time {
+    height: 30px;
+    width: 50px;
+    color: #666666;
+    line-height: 30px;
+    text-align: center;
+}
+
+@media screen and (max-width: 480px) {
+    .dpl-volume {
+        display: none;
+    }
+
+    .dpl-progress {
+        width: calc(100% - 100px); 
+    }
+}

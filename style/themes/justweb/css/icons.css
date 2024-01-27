@@ -1,0 +1,156 @@
+.icon {
+    vertical-align: middle;
+    display: inline-flex;
+}
+
+.icon::before {
+	display: inline-block;
+	background-image: url('../images/ds-icons.png');
+	background-repeat: no-repeat;
+	width: 22px;
+	height: 24px;
+	content: " "; 
+	zoom: .6;
+}
+
+.icon-bold::before {
+	background-position: -3px -2px;
+}
+
+.icon-italic::before {
+	background-position: -34px -2px;
+	width: 16px;
+	height: 24px;
+}
+
+.icon-link::before {
+	background-position: -57px -1px;
+	width: 26px;
+	height: 26px;
+}
+
+.icon-underline::before {
+	background-position: -86px -2px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-smile::before {
+	background-position: -114px -2px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-strike::before {
+	background-position: -140px -2px;
+	width: 28px;
+	height: 24px;
+}
+
+.icon-text-color::before {
+	background-position: -170px -2px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-color::before {
+	background-position: -197px -2px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-quote::before {
+	background-position: -3px -33px;
+	width: 21px;
+	height: 18px;
+}
+
+.icon-more::before {
+	background-position: -31px -39px;
+	width: 22px;
+	height: 6px;
+}
+
+.icon-more-vertical::before {
+	background-position: -67px -31px;
+	width: 6px;
+	height: 22px;
+}
+
+.icon-code::before {
+    background-position: -84px -30px;
+    width: 28px;
+    height: 24px;
+}
+
+.icon-mic::before {
+	background-position: -117px -29px;
+	width: 16px;
+	height: 24px;
+}
+
+.icon-full::before {
+	background-position: -142px -29px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-refull::before {
+	background-position: -170px -29px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-close::before {
+	background-position: -199px -32px;
+	width: 20px;
+	height: 20px;
+}
+
+.icon-update::before {
+	background-position: -2px -57px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-image::before {
+	background-position: -29px -60px;
+	width: 25px;
+	height: 20px;
+}
+
+.icon-upload::before {
+	background-position: -57px -57px;
+	width: 26px;
+	height: 25px;
+}
+
+.icon-settings::before {
+	background-position: -86px -58px;
+	width: 24px;
+	height: 24px;
+}
+
+.icon-photo::before {
+	background-position: 0px -86px;
+    width: 28px;
+    height: 24px;
+}
+
+.icon-music::before {
+    background-position: -30px -87px;
+    width: 28px;
+    height: 26px;
+}
+
+.icon-video::before {
+	background-position: -86px -83px;
+    width: 27px;
+    height: 26px;
+}
+
+.icon-files::before {
+    background-position: -59px -87px;
+    width: 26px;
+    height: 27px;
+}

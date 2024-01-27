@@ -1,0 +1,92 @@
+* {
+	box-sizing: border-box;
+}
+.glr {
+    display: inline-flex;
+    flex-wrap: wrap; 
+    max-width: 480px;
+    width: 100%;
+}
+.glr-row {
+	min-width: 100px; 
+	min-height: 100px;
+	display: flex;
+}
+
+.glr a {
+	display: block;
+	border: 1px solid white;
+}
+
+.glr img {
+	object-fit: cover; 
+	width: 100%;
+	display: block;
+	    max-height: 340px;
+}
+
+.glr:not(.glr-cnt-4) .glr-col-2,
+.glr:not(.glr-cnt-4) .glr-col-1 {
+	flex-basis: 100%;
+}
+
+.glr-col-1 a {
+	flex: 1;
+}
+
+.glr-col-1 img {
+	height: 100%; 
+	/*max-height: 400px;*/
+	max-width: 100%; 
+}
+
+.glr-col-2 img {
+	max-height: 180px; 
+}
+
+.glr-row a:first-child ~ a {
+    /* flex: 1; */
+}
+.glr-row a:first-child ~ a img {
+	width: 100%;
+    height: 100%;
+}
+
+.glr-row a:first-child img {
+	/*height: auto; */
+	min-height: 100px;
+}
+.glr-col-1 + .glr-col-1 a:first-child img {
+	height: 100%; 
+	max-height: unset;
+}
+
+.glr-row + .glr-row img {
+	max-height: 150px;
+}
+
+.glr-cnt-2 {
+	flex-wrap: nowrap;
+}
+.glr-cnt-2 .glr-col-1 img {
+	/*max-height: 280px;*/
+}
+
+.glr-cnt-4 {
+	flex-wrap: nowrap;
+}
+.glr-cnt-4 a {
+	flex: 1; 
+}
+.glr-cnt-4 .glr-col-3 a {
+	max-height: calc(343px / 3);
+}
+
+.glr-cnt-4 .glr-row + .glr-row a img {
+	height: 100%;
+	max-height: unset;
+}
+.glr-cnt-4 .glr-row + .glr-row {
+    width: 120px;
+    flex-direction: column;
+}

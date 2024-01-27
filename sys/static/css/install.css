@@ -1,0 +1,137 @@
+body {
+	margin: 0; 
+	padding: 0; 
+	box-sizing: border-box;
+	background-color: #f3f3f3;
+}
+
+body * {
+	box-sizing: border-box;
+}
+
+.alert {
+	padding: 10px; 
+	border-radius: 5px; 
+}
+
+.alert-error {
+	color: red;
+}
+.alert-success {
+	color: green;
+}
+
+footer, 
+.document {
+	width: 380px; 
+	max-width: 100%; 
+	margin: 0 auto;
+}
+
+footer {
+	text-align: center;
+	padding: 10px;
+}
+
+.logo {
+	text-align: center;
+	padding: 10px;
+}
+
+.document {
+	margin-top: 10vh;
+}
+
+.title {
+	font-size: 17px; 
+	color: gray;
+	padding: 10px;
+	border-bottom: 1px solid #d4d4d4; 
+	background-color: #fafdff;
+}
+
+.wrap-installed, 
+form {
+	border: 1px solid #d4d4d4; 
+	background-color: #fff;
+	box-shadow: 0px 1px 9px -4px rgba(122,122,122,1);
+}
+
+.form-title {
+	padding: 5px 10px; 
+}
+
+.form-description {
+    padding: 5px 10px;
+    color: gray;
+    font-size: 13px;
+}
+
+.form-group {
+	padding: 10px 0;
+}
+
+.form-buttons, 
+.form-input {
+	padding: 5px 10px; 
+}
+
+.form-buttons {
+	min-height: 42px;
+}
+
+.form-buttons button {
+	padding: 7px 10px;
+    border: 1px solid #bdbdbd;
+    color: gray;
+    background-color: white;
+    border-radius: 3px;
+    box-shadow: 0px 0px 5px inset #e0e0e0;
+    cursor: pointer;
+}
+
+.form-buttons button.btn.btn-next {
+	background-color: #2788d6;
+    color: #fff;
+    border-color: #3290e6;
+    box-shadow: 0px 0px 5px inset #63bdf1;
+}
+
+.form-input input[type="text"],
+.form-input input[type="tel"], 
+.form-input input[type="email"],
+.form-input input[type="password"] {
+    padding: 8px;
+    border: 1px solid #e2e2e2;
+    border-radius: 3px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.form-type-hidden {
+	display: none;
+}
+
+.cms-installed {
+	height: 50px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    font-size: 20px;
+    /* background-color: #42a4dd; */
+    color: #8c7b7b;
+}
+
+
+.btn-installed {
+    display: block;
+    border: 2px dotted #23962d;
+    color: #23962d;
+    width: 200px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+    margin-bottom: 20px;
+}

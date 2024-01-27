@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS `user_log` (  `id` int(11) auto_increment,  `id_user` int(11) ,  `method` set('1','0') default '0',  `time` int(11) ,  `ip` bigint(20) default '0',  `ua` varchar(32) default NULL,  PRIMARY KEY  (`id`),  KEY `id_user` (`id_user`),  KEY `time` (`time`)) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

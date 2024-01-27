@@ -1,0 +1,130 @@
+# так безопаснее
+php_value register_globals 0 
+# убираем экранирование кавычек 
+php_value magic_quotes_gpc 0 
+# дописываем сессию к URL 
+php_value session.use_trans_sid 1 
+php_value session.cookie_lifetime 0
+# кодировка по-умолчанию
+AddDefaultCharset UTF-8
+
+DirectoryIndex index.php
+Options -Indexes
+
+<Files count.php>
+order allow,deny
+deny from all
+</Files>
+
+# RewriteEngine
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
+</IfModule>
+
+# задаем соответствие mime типов расширению
+AddType text/vnd.wap.wml;charset=utf-8 .wml
+AddType application/vnd.sonyericsson.mms-template tpl
+AddType application/vnd.wap.wmlc .wmlc
+AddType text/vnd.wap.wmlscript .wmls
+AddType application/vnd.wap.wmlscriptc .wmlsc
+AddType image/vnd.wap.wbmp .wbmp
+AddType application/vnd.eri.thm .thm 
+AddType application/vnd.mophun.application .mpn  
+AddType application/vnd.mophun.certificate .mpc
+AddType text/vnd.sun.j2me.app-descriptor .jad
+Addtype text/x-vmel .mel
+Addtype audio/imelody .imy
+AddType application/vnd.smaf .mmf
+Addtype text/x-vmel .emy
+AddType audio/amr .amr
+AddType audio/x-wav .wav
+AddType application/x-tar .hid
+Addtype image/jpeg .jpg 
+Addtype image/jpeg .jpeg 
+Addtype image/gif .gif 
+Addtype image/png .png 
+Addtype image/bmp .bmp 
+Addtype text/x-imelody .imy 
+Addtype text/x-emelody .emy 
+Addtype text/x-vcard .vcf 
+Addtype text/x-vcalendar .vcs 
+Addtype text/calendar .ics 
+Addtype application/smil .smil 
+Addtype application/smil .smi 
+Addtype application/java-archive .jar 
+Addtype application/vnd.symbian.install .sis 
+Addtype audio/wav .wav 
+Addtype audio/midi .midi 
+Addtype audio/midi .mid 
+Addtype audio/rmf .rmf 
+Addtype application/vnd.wap.mms-message .mms 
+AddType video/flv .flv
+AddType video/mp4 .mp4
+Addtype video/3gpp .3gp
+Addtype application/zip .zip
+Addtype audio/mpeg .mp3
+
+# переопределяем страницы ошибок
+ErrorDocument 400 /err.php?err=400
+ErrorDocument 401 /err.php?err=401
+ErrorDocument 402 /err.php?err=402
+ErrorDocument 403 /err.php?err=403
+ErrorDocument 404 /err.php?err=404
+ErrorDocument 500 /err.php?err=500
+ErrorDocument 502 /err.php?err=502
+
+
+AddHandler application/x-httpd-php .html
+AddHandler cgi-script .pl .py .jsp .asp .htm .shtml .sh .cgi
+AddType application/x-javascript .js
+AddType text/css .css
+AddType text/xml .xml
+AddType application/octet-stream .doc .mov .avi .pdf .xls 
+# ForceType application/x-httpd-php
+
+<ifModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml application/xml application/xhtml+xml text/css text/javascript application/javascript application/x-javascript
+</ifModule>
+
+<ifModule mod_headers.c>
+    #кэшировать html и htm файлы на один день
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "max-age=43200"
+    </FilesMatch>
+    #кэшировать css, javascript и текстовые файлы на одну неделю
+    <FilesMatch "\.(js|css|txt)$">
+        Header set Cache-Control "max-age=604800"
+    </FilesMatch>
+    #кэшировать флэш и изображения на месяц
+    <FilesMatch "\.(flv|swf|ico|gif|jpg|jpeg|png)$">
+        Header set Cache-Control "max-age=2592000"
+    </FilesMatch>
+    #отключить кэширование
+    <FilesMatch "\.(pl|php|cgi|spl|scgi|fcgi)$">
+        Header unset Cache-Control
+    </FilesMatch>
+</IfModule>
+
+<ifModule mod_expires.c>
+    ExpiresActive On
+    #по умолчанию кеш в 5 секунд
+    ExpiresDefault "access plus 5 seconds"
+    #кэшировать флэш и изображения на месяц
+    ExpiresByType image/x-icon "access plus 2592000 seconds"
+    ExpiresByType image/jpeg "access plus 2592000 seconds"
+    ExpiresByType image/png "access plus 2592000 seconds"
+    ExpiresByType image/gif "access plus 2592000 seconds"
+    ExpiresByType application/x-shockwave-flash "access plus 2592000 seconds"
+    #кэшировать css, javascript и текстовые файлы на одну неделю
+    ExpiresByType text/css "access plus 604800 seconds"
+    ExpiresByType text/javascript "access plus 604800 seconds"
+    ExpiresByType application/javascript "access plus 604800 seconds"
+    ExpiresByType application/x-javascript "access plus 604800 seconds"
+    #кэшировать html и htm файлы на один день
+    ExpiresByType text/html "access plus 43200 seconds"
+    #кэшировать xml файлы на десять минут
+    ExpiresByType application/xhtml+xml "access plus 600 seconds"
+</ifModule>
