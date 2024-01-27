@@ -1,98 +1,64 @@
 <?php
 /**
  * Простой парсер SQL-дампов для извлечения запросов
- *
- * Использование:
- *   SQLParser::getQueriesFromFile('Имя файла')  - Извлечение запросов из файла
- *   SQLParser::getQueries('SQL-дамп')           - Извлечение запросов из строки
- *
- *   Обе функции возвращают массив из запросов. Пустые запросы опускаются.
- *
- * Лицензия:
- *   Это свободный код, используйте его на свой страх и риск.
- *   Автор не несёт никакой ответственности! :)
- *
- * @author Прибора Антон Николаевич (http://anton-pribora.ru)
- * @copyright (c) Прибора Антон Николаевич, 2008-11-07
+ * SQLParser::getQueriesFromFile('Имя файла')  - Извлечение запросов из файла
+ * SQLParser::getQueries('SQL-дамп')           - Извлечение запросов из строки
  */
 
-
-/**
- * Парсер SQL-запросов
- *
- */
 class SQLParser
 {
-    /**
-     * Выборка SQL-запросов из файла
-     *
-     * @param string $file
-     * @return array
-     */
-    static public function getQueriesFromFile( $file )
+    static public function getQueriesFromFile($file)
     {
-        return self::getQueries( file_get_contents($file) );
+        return self::getQueries(file_get_contents($file));
     }
 
-    /**
-     * Разбор SQL-строки на запросы
-     *
-     * @param string $sql
-     * @return array
-     */
-    static public function getQueries( $sql )
+    static public function getQueries($sql)
     {
-        $queries  = array();
-        $strlen   = strlen($sql);
+        $queries = array();
+        $strlen = strlen($sql);
         $position = 0;
-        $query    = '';
+        $query = '';
 
-        for ( ; $position < $strlen; ++$position )
-        {
-            $char  = $sql{ $position };
+        for (; $position < $strlen; ++$position) {
+            $char = $sql[$position];  //
 
-            switch ( $char )
-            {
+            switch ($char) {
                 case '-':
-                    if ( substr($sql, $position, 3) !== '-- ' )
-                    {
+                    if (substr($sql, $position, 3) !== '-- ') {
                         $query .= $char;
                         break;
                     }
 
                 case '#':
-                    while ( $char !== "\r" && $char !== "\n" && $position < $strlen - 1 )
-                        $char = $sql{ ++$position };
+                    while ($char !== "\r" && $char !== "\n" && $position < $strlen - 1)
+                        $char = $sql[++$position]; // 
                     break;
 
                 case '`':
                 case '\'':
                 case '"':
-                    $quote  = $char;
+                    $quote = $char;
                     $query .= $quote;
 
-                    while ( $position < $strlen - 1 )
-                    {
-                        $char = $sql{ ++$position };
+                    while ($position < $strlen - 1) {
+                        $char = $sql[++$position];
 
-                        if ( $char === '\\' )
-                        {
+                        if ($char === '\\') {
                             $query .= $char;
 
-                            if ( $position < $strlen - 1 )
-                            {
-                                $char   = $sql{ ++$position };
+                            if ($position < $strlen - 1) {
+                                $char = $sql[++$position];
                                 $query .= $char;
 
-                                if ( $position < $strlen - 1 ) $char = $sql{ ++$position };
-                            }
-                            else
-                            {
+                                if ($position < $strlen - 1)
+                                    $char = $sql[++$position];
+                            } else {
                                 break;
                             }
                         }
 
-                        if ( $char === $quote ) break;
+                        if ($char === $quote)
+                            break;
 
                         $query .= $char;
                     }
@@ -102,8 +68,9 @@ class SQLParser
 
                 case ';':
                     $query = trim($query);
-                    if ( $query ) $queries[] = $query;
-                    $query     = '';
+                    if ($query)
+                        $queries[] = $query;
+                    $query = '';
                     break;
 
                 default:
@@ -112,8 +79,9 @@ class SQLParser
             }
         }
 
-        $query = trim( $query );
-        if ( $query ) $queries[] = $query;
+        $query = trim($query);
+        if ($query)
+            $queries[] = $query;
 
         return $queries;
     }
