@@ -109,7 +109,7 @@ function include_deprecated($file, $version)
 /**
 * Функция кеширует инклуды в файл, с интервалом обновления заданным в настройках системы
 */ 
-function add_includes_cache($includes, $dir_files = '', $cache_name) 
+function add_includes_cache($includes, $cache_name, $dir_files = '')
 {
     $path_tmp_includes = ROOTPATH . '/sys/tmp/' . $cache_name . '.cache.php'; 
     $includes = use_filters('ds_includes_cache_array', $includes); 
@@ -173,13 +173,10 @@ else {
 
     // Кеширование функций
     if ($is_functions_cache === true) {
-        add_includes_cache($cache_includes_fnc, str_replace(H, '', $path_functions_dir), 'functions');
+        add_includes_cache($cache_includes_fnc, 'functions', str_replace(H, '', $path_functions_dir));
         unset($cache_includes_fnc);         
     }
 }
 
-/**
-* Хук срабатывает после загрузки основных функций системы 
-* add_event('functions_loaded', 'callback_function'); 
-*/ 
+# Хук срабатывает после загрузки основных функций системы
 do_event('ds_functions_loaded'); 
