@@ -53,10 +53,13 @@ if (isset($_POST['save_settings'])) {
 
 $set['title'] = isset($settings_page['page_title']) ? $settings_page['page_title'] : __('Настройки');
 get_header_admin(); 
+
 ?>
 <div class="page-settings"> 
     <form action="<?php echo get_site_url('/adm_panel/settings.php?page=' . $page_id); ?>" method="POST">
+        <?php do_event('ds_before_admin_settings', $page_id, $settings_page); ?>
         <?php do_settings_fields($settings_page['id']); ?>
+        <?php do_event('ds_after_admin_settings', $page_id, $settings_page); ?>
     </form>
 </div>
 <?

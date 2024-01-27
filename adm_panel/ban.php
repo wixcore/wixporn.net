@@ -3,210 +3,220 @@
 // Основной файл системы
 require('../sys/inc/core.php'); 
 
-if (!user_access('user_ban_set') && !user_access('user_ban_set_h') && !user_access('user_ban_unset')){header("Location: /index.php?".SID);exit;}
-
-if (isset($_GET['id'])) { 
-    $ank['id']=intval($_GET['id']);
-} else {
-    header("Location: /index.php?".SID);
-    exit;
+if (!user_access('user_ban_set') && !user_access('user_ban_set_h') && !user_access('user_ban_unset')) {
+    ds_redirect("/index.php?".SID);
 }
 
-if (db::count("SELECT COUNT(*) FROM `user` WHERE `id` = '$ank[id]' LIMIT 1")==0)
-{
-    header("Location: /index.php?".SID);
-    exit;
+$action = (isset($_GET['action']) ? text($_GET['action']) : 'list'); 
+$profile_id = (isset($_GET['id']) ? $_GET['id'] : 0); 
+$ban_id = (isset($_GET['ban_id']) ? $_GET['ban_id'] : 0); 
+$ank = get_user($profile_id);
+
+if ($user['level'] <= $ank['level']) {
+    ds_redirect("/index.php?".SID);
 }
 
-$ank = get_user($ank['id']);
-
-if ($user['level'] <= $ank['level'])
-{
-    header("Location: /index.php?".SID);
-    exit;
+if ($ban_id) {
+    $ban = db::fetch("SELECT * FROM ban WHERE id = " . $ban_id); 
 }
 
-$set['title'] = 'Бан пользователя '.$ank['nick'];
+if (!empty($_POST['save_ban'])) {
 
-if (isset($_GET['delete']) && db::count("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['delete'])."'") && user_access('user_ban_unset'))
-{
-    $ban_info = db::fetch("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['delete'])."'", ARRAY_A);
-    $ank2 = db::fetch("SELECT * FROM `user` WHERE `id` = '$ban_info[id_ban]' LIMIT 1", ARRAY_A);
-    
-    if (($user['level']>$ank2['level'] || $user['id'] == $ank2['id']) || $user['level'] == 4)
-    {
-        db::query("DELETE FROM `ban` WHERE `id` = '".intval($_GET['delete'])."' LIMIT 1");
-        admin_log('Пользователи','Бан',"Удаление нарушения с пользователя '[url=/amd_panel/ban.php?id=$ank[id]]$ank[nick][/url]'");
-        $_SESSION['message'] = 'Нарушение удалено';
-        header("Location: ?id=$ank[id]");
-        exit;
-    }
-    else
-    $err[]='Нет прав';
-}
+    $calc = array(
+        'min'    => 60, 
+        'hour'   => 60 * 60, 
+        'day'    => 60 * 60 * 24,
+        'month'  => 60 * 60 * 24 * 30, 
+        'year'   => 60 * 60 * 24 * 365, 
+    ); 
 
-if (isset($_GET['unset']) && db::count("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['unset'])."'") && user_access('user_ban_unset'))
-{
-    $ban_info = db::fetch("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['unset'])."'", ARRAY_A);
-    $ank2 = db::fetch("SELECT * FROM `user` WHERE `id` = '$ban_info[id_ban]' LIMIT 1", ARRAY_A);
-    
-    if (($user['level'] > $ank2['level'] || $user['id'] == $ank2['id']) || $user['level'] == 4)
-    {
-        db::query("UPDATE `ban` SET `time` = '$time', `navsegda` = '0' WHERE `id` = '".intval($_GET['unset'])."' LIMIT 1");
-        admin_log('Пользователи','Бан',"Снятие бана пользователя '[url=/amd_panel/ban.php?id=$ank[id]]$ank[nick][/url]'");
-        $_SESSION['message'] = 'Время бана обнулено';
-        header("Location: ?id=$ank[id]");
-        exit;
-    }
-    else
-    $err[]='Нет прав';
-}
+    $comment = $_POST['comment'];
+    $vremja = (!empty($_POST['vremja']) ? $_POST['vremja'] : 'day'); 
+    $time = (int) $_POST['time_until']; 
 
-if (isset($_POST['ban_pr']) && isset($_POST['time']) && isset($_POST['vremja']) && (user_access('user_ban_set') || user_access('user_ban_set_h')))
-{
-    $timeban = $time;
-    if ($_POST['vremja'] == 'min')$timeban+=intval($_POST['time'])*60;
-    if ($_POST['vremja'] == 'chas')$timeban+=intval($_POST['time'])*60*60;
-    if ($_POST['vremja'] == 'sut')$timeban+=intval($_POST['time'])*60*60*24;
-    if ($_POST['vremja'] == 'mes')$timeban+=intval($_POST['time'])*60*60*24*30;
-    
-    if ($timeban < $time) { 
-        $err[] = 'Ошибка времени бана';
+    $ban['banned_id'] = get_user_id();
+    $ban['user_id'] = $ank['id'];
+
+    $ban['time_until'] = (time() + (!empty($_POST['forever']) ? $calc['year'] * 100 : $time * $calc[$vremja])); 
+    $ban['reason'] = (!empty($_POST['reason']) ? $_POST['reason'] : '');
+    $ban['comment'] = (!empty($_POST['comment']) ? $_POST['comment'] : '');
+    $ban['forever'] = (!empty($_POST['forever']) ? 1 : 0);
+    $ban['time_create'] = time(); 
+    $ban['hide'] = 0; 
+
+    if ($ban['time_until'] < $time) {
+        add_error(__('Ошибка времени бана')); 
     }
 
-    if (!user_access('user_ban_set'))$timeban=min($timeban, $time+3600*24);
+    if (strlen2($ban['comment']) > 1024) { 
+        $err[] = __('Сообщение слишком длинное'); 
+    }
 
-    $pochemu = (isset($_POST['pochemu']) ? (int) $_POST['pochemu'] : '0');
-    $razdel = my_esc($_POST['razdel']);
-    $post = (int) $_POST['post'];
-    $navsegda = (int) $_POST['navsegda'];
+    if (!is_errors()) {
+        db::insert('ban', $ban); 
+        $ban_id = db::insert_id(); 
+        $_SESSION['message'] = __('Пользователь успешно заблокирован'); 
+        ds_redirect('?id=' . $ank['id']); 
+    }
+}
 
-    $prich = $_POST['ban_pr'];
+if (isset($ban['id'])) {
+    if ($action == 'remove') {
+        db::delete('ban', ['id' => $ban_id]); 
+        $_SESSION['message'] = __('Блокировка успешно удалена'); 
+    }    
 
-    if (strlen2($prich)>1024){$err[]='Сообщение слишком длинное';}
-    if (strlen2($prich)<10){$err[]='Необходимо подробнее указать причину';}
+    if ($action == 'unblock') {
+        db::update('ban', ['time_until' => time() - 1, 'forever' => 0], ['id' => $ban_id]); 
+        $_SESSION['message'] = __('Пользователь успешно разблокирован'); 
+    }    
+    
+    if ($action != 'list') {
+        ds_redirect('?id=' . $ank['id']); 
+    }
+}
 
-    $prich = my_esc($prich);
 
-    if (!isset($err)) {
-        db::query("INSERT INTO `ban` (`id_user`, `id_ban`, `prich`, `time`, `pochemu`, `razdel`, `post`, `navsegda`) VALUES ('$ank[id]', '$user[id]', '$prich', '$timeban', '$pochemu', '$razdel', '$post', '$navsegda')");
-        admin_log('Пользователи','Бан',"Бан пользователя '[url=/adm_panel/ban.php?id=$ank[id]]$ank[nick][/url]' до ".vremja($timeban)." по причине '$prich'");
+
+if ($action == 'list') {
+    add_event('ds_admin_title_action', function($links = array()) {
+        $profile_id = (isset($_GET['id']) ? $_GET['id'] : 0); 
+
+        $links['add'] = array(
+            'title' => __('Новая блокировка'), 
+            'url'   => get_admin_url('ban.php', 'action=add&id=' . $profile_id), 
+        ); 
         
-        $_SESSION['message'] = 'Пользователь успешно забанен';
-        header("Location: ?id=$ank[id]");
-        exit;
-    }
+        return $links; 
+    });     
 }
+
+
+$set['title'] = __('Бан: %s', $ank['nick']);
 get_header_admin(); 
 
-$k_post = db::count("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]'");
-$k_page = k_page($k_post,$set['p_str']);
-$page = page($k_page);
-$start = $set['p_str']*$page-$set['p_str'];
+$reasons = get_ban_reasons(); 
 
-echo "<table class='post'>\n";
-
-if ($k_post == 0) {
-    echo "<div class='mess'>\n";
-    echo "Нет нарушений\n";
-    echo "</div>\n";
-}
-
-$q = db::query("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
-
-while ($post = $q->fetch_assoc())
-{
-    if ($num == 0) {
-        echo "  <div class='nav1'>\n";
-        $num = 1;
-    } elseif ($num == 1) {
-        echo "  <div class='nav2'>\n";
-        $num = 0;
+if ($action == 'add' || $action == 'edit') {
+    $valuesReasons = []; 
+    foreach($reasons AS $key => $value) {
+        $valuesReasons[] = array(
+            'title' => $value,
+            'value' => $key,
+        ); 
     }
-    
-    $ank2 = db::fetch("SELECT * FROM `user` WHERE `id` = $post[id_ban] LIMIT 1", ARRAY_A);
 
-    echo user::avatar($ank2['id']) . user::nick($ank2['id'], 1, 1, 1);	
-    
-    if ($post['navsegda'] == 1){		
-        echo " бан <font color=red><b>навсегда</b></font><br />";
-    } else {		
-        echo " до " . vremja($post['time']) . "<br />";	
+    $valuesFormat = array(
+        array(
+            'title' => __('Минуты'), 
+            'value' => 'min', 
+        ), 
+        array(
+            'title' => __('Часы'), 
+            'value' => 'hour', 
+        ), 
+        array(
+            'title' => __('Дни'), 
+            'value' => 'day', 
+        ), 
+        array(
+            'title' => __('Месяцы'), 
+            'value' => 'month', 
+        ), 
+        array(
+            'title' => __('Годы'), 
+            'value' => 'year', 
+        ), 
+    ); 
+
+    $fields = use_filters('ds_user_ban_fields', array(
+        array(
+            'field_title' => __('Время бана'), 
+            'field_name' => 'time_until', 
+            'field_type' => 'text', 
+        ),
+        array(
+            'field_title' => __('Формат времени'), 
+            'field_name' => 'vremja', 
+            'field_type' => 'radio', 
+            'field_value' => 'day',
+            'field_values' => $valuesFormat, 
+        ),
+        array(
+            'field_title' => __('Причина'), 
+            'field_name' => 'reason', 
+            'field_value' => '1', 
+            'field_type' => 'select', 
+            'field_value' => key($reasons),
+            'field_values' => $valuesReasons, 
+        ),
+        array(
+            'field_title' => __('Комментарий'), 
+            'field_name' => 'comment', 
+            'field_type' => 'textarea', 
+        ),
+        array(
+            'field_title' => __('Заблокировать навсегда'), 
+            'field_name' => 'forever', 
+            'field_type' => 'checkbox', 
+            'field_value' => 1, 
+            'field_checked' => 0, 
+        ),
+    )); 
+
+
+    $forms = new Forms('?id=' . $ank['id'] . '&action=' . $action, 'POST'); 
+    $forms->add_field(array(
+        'field_name' => 'save_ban', 
+        'field_value' => '1', 
+        'field_type' => 'hidden', 
+    )); 
+
+    foreach($fields AS $field) {
+        $forms->add_field($field); 
     }
-    
-    echo '<b>Причина:</b> '.$pBan[$post['pochemu']].'<br />';
-    echo '<b>Раздел:</b> '.$rBan[$post['razdel']].'<br />';
 
-    echo '<b>Комментарий:</b> ' . output_text($post['prich']) . "<br />\n";
-    
-    if ($post['time'] > $time && user_access('user_ban_unset')) {
-        echo "<font color=red><b>Активен</b></font> | <a href='?id=$ank[id]&amp;unset=$post[id]'>Снять бан</a><br />\n";
+    $forms->button(isset($ban['id']) ? __('Сохранить') : __('Заблокировать'));
+    echo $forms->display();    
+} else {
+    $items = db::select("SELECT * FROM ban WHERE user_id = '" . $profile_id . "' ORDER BY time_until DESC, forever ASC"); 
+
+    if (!empty($items)) {
+        ?><div class="list"><?
+        foreach($items AS $item) 
+        {
+            $active = ($item['time_until'] > time() || $item['forever'] == 1); 
+
+            $ban_action = array(); 
+            if ($active == true) {
+                $ban_action[] = '<a class="ds-link-edit" href="?id=' . $ank['id'] . '&ban_id=' . $item['id'] . '&action=unblock">' . __('Снять бан') . '</a>'; 
+            }
+            
+            $ban_action[] = '<a class="ds-link-delete" href="?id=' . $ank['id'] . '&ban_id=' . $item['id'] . '&action=remove">' . __('Удалить') . '</a>'; 
+            $info = array(__('Кто заблокировал: %s', '<a href="' . get_user_url($item['banned_id']) . '">' . get_user_nick($item['banned_id']) . '</a>')); 
+
+            if ($item['comment']) {
+                $info[] = __('Комментарий: %s', output_text($item['comment'])); 
+            }
+            ?>
+            <div class="list-item <?php echo ($active == true ? 'active' : ''); ?>">
+                <div class="list-item-title"><?php echo __('Действует до: %s', $item['forever'] == 0 ? vremja($item['time_until']) : __('Навсегда')); ?></div>
+                <div class="list-item-description"><?php echo join('<br />', $info); ?></div>
+                <div class="list-item-action">
+                    <?php echo join(' | ', $ban_action); ?>
+                </div> 
+            </div>
+            <?
+        }
+        ?></div><?    
+    } else {
+        ?>
+        <div class="empty empty-ban">
+            <?php echo __('Список блокировок пуст'); ?>
+        </div>
+        <?
     }
-    
-    echo "<div style='text-align:right;'> <a href='?id=$ank[id]&amp;delete=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a></div>";
-    echo "</div>\n";
 }
 
-echo "</table>\n";
-
-if ($k_page>1) {
-    str('?id='.$ank['id'].'&amp;',$k_page,$page);
-}
-    
-if (user_access('user_ban_set') || user_access('user_ban_set_h'))
-{
-    echo "<form action=\"ban.php?id=$ank[id]&amp;$passgen\" method=\"post\">\n";
-    echo "<div class='nav1'>Раздел:</div>";
-    if ($user['group_access'] == 12 || $user['level'] > 1)echo "<input name='razdel' type='radio' value='guest'  checked='checked'/>Гостевая <br />";
-    if ($user['group_access'] == 11 || $user['level'] > 1)echo "<input name='razdel' type='radio' value='notes'  checked='checked'/>Дневники <br />";
-    if ($user['group_access'] == 3 || $user['level'] > 1)echo "<input name='razdel' type='radio' value='forum'  checked='checked'/>Форум <br />";
-    if ($user['group_access'] == 4 || $user['level'] > 1)echo "<input name='razdel' type='radio'  value='files'  checked='checked'/>Файлы <br />";
-    if ($user['group_access'] == 2 || $user['level'] > 1)echo "<input name='razdel' type='radio'  value='chat'  checked='checked'/>Чат <br />";
-    if ($user['group_access'] == 5 || $user['level'] > 1)echo "<input name='razdel' type='radio'  value='lib'  checked='checked'/>Библиотека<br />";
-    if ($user['group_access'] == 6 || $user['level'] > 1)echo "<input name='razdel' type='radio'  value='foto'  checked='checked'/>Фотографии<br />";
-    if ($user['level'] > 1)
-    echo "<input name='razdel' type='radio' value='all' checked='checked'/>Весь сайт <br />";
-
-    echo "<div class='nav1'>Причина:</div>";
-    echo "<input name='pochemu' type='radio' value='1' checked='checked'/>Спам/Реклама<br />";
-    echo "<input name='pochemu' type='radio' value='2' />Мошенничество<br />";
-    echo "<input name='pochemu' type='radio' value='3' />Нецензурная брань<br />";
-    echo "<input name='pochemu' type='radio' value='4' />Клонирование ников<br />";
-    echo "<input name='pochemu' type='radio' value='5' />Подстрекательство, провокация и побуждение к агрессии<br />";
-    echo "<input name='pochemu' type='radio' value='6' />Флуд<br />";
-    echo "<input name='pochemu' type='radio' value='7' />Флейм<br />";
-    echo "<input name='pochemu' type='radio' value='0' />Другое<br />";
-
-    echo "<div class='nav1'>Сообщения:</div>";
-    echo "<input name='post' type='radio' value='0' checked='checked'/>Показывать <br />";
-    echo "<input name='post' type='radio' value='1' />Скрыть<br />";
-
-    echo "<div class='nav1'>Комментарий:</div>\n";
-    echo "<textarea name=\"ban_pr\"></textarea><br />\n";
-    echo "<div class='nav1'>Время бана ".(user_access('user_ban_set')?null:'(max 1 сутки)').":</div>\n";
-    echo "<input type='text' name='time' title='Время бана' value='10' maxlength='11' size='3' />\n";
-    echo "<select class='form' name=\"vremja\">\n";
-    echo "<option value='min'>Минуты</option>\n";
-    echo "<option ".(($k_post > 1)?'selected="selected" ':null)."value='chas'>Часы</option>\n";
-    echo "<option value='sut'>Сутки</option>\n";
-    echo "<option value='mes'".(user_access('user_ban_set')?null:' disabled="disabled"').">Месяцы</option>\n";
-    echo "</select><br />\n";
-    echo "<label><input type='checkbox' name='navsegda' value='1' /> Навсегда</label><br />";
-    echo "<input type='submit' value='Забанить' />\n";
-    echo "</form>\n";
-}
-else 
-{
-    echo "<div class='err'>Нет прав для того, чтобы забанить пользователя</div>\n";
-}
-
-echo "<div class='foot'>\n";
-echo "&raquo;<a href=\"/mail.php?id=$ank[id]\">Написать сообщение</a><br />\n";
-echo "&laquo;<a href=\"/info.php?id=$ank[id]\">В анкету</a><br />\n";
-
-if (user_access('adm_panel_show')) {
-    echo "&laquo;<a href='/adm_panel/'>В админку</a><br />\n";
-}
-echo "</div>\n";
 
 get_footer_admin(); 

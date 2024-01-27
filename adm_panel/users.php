@@ -2,7 +2,7 @@
 
 require( '../sys/inc/core.php' );
 
-user_access( 'adm_mysql', null, 'index.php?' . SID );
+user_access( 'adm_users_list', null, 'index.php?' . SID );
 
 $set['title'] = __('Пользователи');
 get_header_admin(); 

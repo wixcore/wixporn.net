@@ -16,8 +16,16 @@ if (is_confirmed_valid('confirm', 'update')) {
 	}
 
 	elseif ($do == 'core') {
-		$archive = file_get_contents($update_info['latest']['download']); 
+		$arrContextOptions = array(
+		    'ssl' => array(
+		        'verify_peer' => false,
+		        'verify_peer_name' => false,
+		    ),
+		); 
+		
+		$archive = file_get_contents($update_info['latest']['download'], false, stream_context_create($arrContextOptions)); 
 		$archive_path = ROOTPATH . '/sys/upgrade/' . basename($update_info['latest']['download']); 
+
 		file_put_contents($archive_path, $archive);
 
 		$version_current = get_version(); 
@@ -100,7 +108,7 @@ if (is_confirmed_valid('confirm', 'update')) {
 
 		if (!is_errors()) {
 			$_SESSION['message'] = __('Система успешно обновлена до версии %s', $update_info['latest']['version']); 
-			ds_redirect(get_site_url('/adm_panel/info.php?version=' . $update_info['latest']['version'])); 			
+			ds_redirect(get_site_url('/adm_panel/info.php?from=' . $version_current . '&to=' . $update_info['latest']['version'])); 			
 		}
 	}
 }
@@ -147,7 +155,7 @@ if (count($updateList['plugins']) > 0) {
 	    <div class="list-item-description"><?php echo $plugin['description']; ?></div>
 	    <div class="list-item-description">
 	    	<?php echo __('Версия: %s', $plugin['version']); ?>	| 
-	    	<?php echo __('Автор: %s', '<a href="' . $plugin['authoruri'] . '">' . $plugin['author'] . '</a>'); ?>	
+	    	<?php echo __('Автор: %s', '<a href="' . (isset($plugin['authoruri']) ? $plugin['authoruri'] : $plugin['url']) . '">' . $plugin['author'] . '</a>'); ?>	
 	    </div>
 	    <div class="list-item-action">
 	        <?php echo join(' | ', $plug_action); ?>

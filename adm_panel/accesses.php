@@ -1,51 +1,108 @@
-<?php
+<?php 
+
+
 // Основной файл системы
-require('../sys/inc/core.php');
+require('../sys/inc/core.php'); 
 
-user_access('adm_accesses', null, 'index.php?' . SID);
+if (!user_access('adm_accesses')) {
+    ds_redirect("/?sid=" . time());
+}
 
-if (isset($_GET['id_group']) && db::count("SELECT COUNT(*) FROM `user_group` WHERE `id` = '" . intval($_GET['id_group']) . "'")) {
-    $group        = db::fetch("SELECT * FROM `user_group` WHERE `id` = '" . intval($_GET['id_group']) . "'", ARRAY_A);
-    $set['title'] = output_text('Группа "' . $group['name'] . '" - привилегии'); // заголовок страницы
-    get_header_admin(); 
-    if (isset($_POST['accesses'])) {
-        db::query("DELETE FROM `user_group_access` WHERE `id_group` = '$group[id]'");
-        $q = db::query("SELECT * FROM `all_accesses`");
-        while ($post = $q->fetch_assoc()) {
-            $type = $post['type'];
-            if (isset($_POST[$type]) && $_POST[$type] == 1)
-                db::query("INSERT INTO `user_group_access` (`id_group`, `id_access`) VALUES ('$group[id]', '$post[type]')");
+$action = (isset($_GET['action']) ? text($_GET['action']) : 'list'); 
+$profile_id = (isset($_GET['id']) ? $_GET['id'] : 0); 
+$group_id = (isset($_GET['group_id']) ? $_GET['group_id'] : ''); 
+
+if ($group_id && get_user_roles($group_id) == null) {
+    ds_die(__('Произошла ошибка, роли c ID %s не существует', $group_id)); 
+}
+
+if (!empty($_POST['save_accesses'])) {
+    db::query("DELETE FROM `user_group_access` WHERE `id_group` = '" . $group_id . "'");
+
+    $accesses = get_user_accesses(); 
+    foreach($accesses AS $key => $value) {
+        if (isset($_POST[$key]) && $_POST[$key] == 1) {
+            db::insert('user_group_access', [
+                'id_group' => $group_id, 
+                'id_access' => $key, 
+            ]);
         }
-        msg('Привилегии успешно изменены');
     }
     
-    echo "<form method='post' action='?id_group=$group[id]&amp;$passgen'>\n";
-    $q = db::query("SELECT * FROM `all_accesses` ORDER BY `name` ASC");
-    while ($post = $q->fetch_assoc()) {
-        echo "<label>";
-        echo "<input type='checkbox'" . (db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '$group[id]' AND `id_access` = '$post[type]' LIMIT 1") == 1 ? " checked='checked'" : null) . " name='$post[type]' value='1' />";
-        echo $post['name'];
-        echo "</label><br />\n";
-    }
-    echo "<input value='Применить' name='accesses' type='submit' />\n";
-    echo "</form>\n";
-    echo "<div class='foot'>\n";
-    echo "&laquo;<a href='accesses.php'>Группы</a><br />";
-    echo "&laquo;<a href='index.php'>Админка</a><br />";
-    echo "</div>\n";
-    include_once '../sys/inc/tfoot.php';
+    $_SESSION['message'] = __('Привилегии успешно изменены');
+    ds_redirect('?action=edit&group_id=' . $group_id);         
 }
-$set['title'] = 'Группы пользователей'; // заголовок страницы
+
+if ($group_id) {
+    $group = get_user_roles($group_id); 
+    $set['title'] = __('Группа: %s', $group['title']);
+} else {
+    $set['title'] = __('Группы пользователей');
+}
+
 get_header_admin(); 
-echo "<div class='menu'>\n";
-$accesses = db::query("SELECT * FROM `user_group` ORDER BY `id` ASC");
-while ($res = $accesses->fetch_assoc()) {
-    echo "<a href='?id_group=$res[id]'>$res[name] (L$res[level], " . db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '$res[id]'") . ")</a><br />\n";
+
+$accesses = get_user_accesses(); 
+
+if ($action == 'edit') {
+    $access_list = db::get_var("SELECT id_access FROM `user_group_access` WHERE `id_group` = '" . $group_id . "'", true); 
+
+    $accessFields = []; 
+    foreach($accesses AS $key => $value) {
+        $accessFields[] = array(
+            'field_title' => $value . ' {'.$key.'}', 
+            'field_name' => $key, 
+            'field_type' => 'checkbox', 
+            'field_value' => 1, 
+            'field_checked' => (in_array($key, $access_list) ? 1 : 0), 
+        ); 
+    }
+
+    $fields = use_filters('ds_user_access_fields', $accessFields); 
+
+    $forms = new Forms('?group_id=' . $group_id . '&action=edit', 'POST'); 
+    $forms->add_field(array(
+        'field_name' => 'save_accesses', 
+        'field_value' => '1', 
+        'field_type' => 'hidden', 
+    )); 
+
+    foreach($fields AS $field) {
+        $forms->add_field($field); 
+    }
+
+    $forms->button(__('Сохранить'));
+    echo $forms->display();    
+} else {
+    $roles = get_user_roles(); 
+
+    if (!empty($roles)) {
+        ?><div class="list"><?
+        foreach($roles AS $role_id => $role) 
+        {
+            $count_access = db::count("SELECT COUNT(*) FROM `user_group_access` WHERE `id_group` = '" . $role_id . "' LIMIT 1"); 
+
+            $action_links = array(); 
+            $action_links[] = '<a class="ds-link-edit" href="?group_id=' . $role_id . '&action=edit">' . __('Редактировать') . '</a>'; 
+            ?>
+            <div class="list-item">
+                <div class="list-item-title">
+                    <?php echo $role['title']; ?> <?php echo '(L' . $role['level'] . ', ' . $count_access . ')'; ?>
+                </div>
+                <div class="list-item-action">
+                    <?php echo join(' | ', $action_links); ?>
+                </div> 
+            </div>
+            <?
+        }
+        ?></div><?    
+    } else {
+        ?>
+        <div class="empty empty-ban">
+            <?php echo __('Список групп пользователей пуст'); ?>
+        </div>
+        <?
+    }
 }
-echo "</div>\n";
-if (user_access('adm_panel_show')) {
-    echo "<div class='foot'>\n";
-    echo "&laquo;<a href='index.php'>Админка</a><br />";
-    echo "</div>\n";
-}
+
 get_footer_admin(); 

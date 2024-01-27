@@ -4,17 +4,23 @@ require('../sys/inc/core.php' );
 
 user_access( 'adm_info', null, 'index.php?' . SID );
 
-$dirupdate = ROOTPATH . '/sys/upgrade/update'; 
+if (isset($_GET['from']) && isset($_GET['to'])) {
+    $dirupdate = ROOTPATH . '/sys/upgrade/update'; 
+    $from = str_replace('.', '', $_GET['from']); 
+    $to = str_replace('.', '', $_GET['to']); 
 
-if (is_dir($dirupdate)) {
-	$updiropen = opendir($dirupdate);
+    if (is_dir($dirupdate)) {
+        $updiropen = opendir($dirupdate);
 
-    while ($filebase = readdir($updiropen)) {
-        if (preg_match('/update\-([0-9]+)_to_([0-9]+)\.php$/m', $filebase)) {
-            require $dirupdate . '/' . $filebase; 
-            unlink($dirupdate . '/' . $filebase); 
+        while ($filebase = readdir($updiropen)) {
+            if (preg_match('/update\-([0-9]+)_to_([0-9]+)\.php$/m', $filebase, $matches)) {
+                if ($matches[1] >= $from) {
+                    require $dirupdate . '/' . $filebase;                  
+                }
+                unlink($dirupdate . '/' . $filebase);  
+            }
         }
-    }
+    } 
 }
 
 $set[ 'title' ] = __('Общая информация');
